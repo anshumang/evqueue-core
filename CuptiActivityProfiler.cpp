@@ -26,6 +26,10 @@ CuptiActivityProfiler::CuptiActivityProfiler(void)
   CUPTI_CALL(cuptiActivityEnable(CUPTI_ACTIVITY_KIND_OVERHEAD));
   CUPTI_CALL(cuptiActivityRegisterCallbacks(reinterpret_cast<void (*)(unsigned char**, long unsigned int*, long unsigned int*)>(&CuptiActivityProfiler::bufferRequested), reinterpret_cast<void (*)(CUctx_st*, unsigned int, unsigned char*, long unsigned int, long unsigned int)>(&CuptiActivityProfiler::bufferCompleted)));
   CUPTI_CALL(cuptiGetTimestamp(&m_start_timestamp));
+  m_kernel_ctr=m_memcpy_h2d_ctr=m_memcpy_d2h_ctr=m_overhead_ctr=0;
+  m_kernel_cumul_occ=m_memcpy_h2d_cumul_occ=m_memcpy_d2h_cumul_occ=m_overhead_cumul_occ=0;
+  m_kernel_window_start=ULLONG_MAX;
+  m_kernel_window_end=0;
 }
 
 CuptiActivityProfiler::~CuptiActivityProfiler(void)
@@ -37,51 +41,24 @@ CuptiActivityProfiler::~CuptiActivityProfiler(void)
 
 }
 
-const char *CuptiActivityProfiler::getMemcpyKindString(CUpti_ActivityMemcpyKind kind)
-{
-  switch (kind) {
-  case CUPTI_ACTIVITY_MEMCPY_KIND_HTOD:
-    return "HtoD";
-  case CUPTI_ACTIVITY_MEMCPY_KIND_DTOH:
-    return "DtoH";
-  case CUPTI_ACTIVITY_MEMCPY_KIND_HTOA:
-    return "HtoA";
-  case CUPTI_ACTIVITY_MEMCPY_KIND_ATOH:
-    return "AtoH";
-  case CUPTI_ACTIVITY_MEMCPY_KIND_ATOA:
-    return "AtoA";
-  case CUPTI_ACTIVITY_MEMCPY_KIND_ATOD:
-    return "AtoD";
-  case CUPTI_ACTIVITY_MEMCPY_KIND_DTOA:
-    return "DtoA";
-  case CUPTI_ACTIVITY_MEMCPY_KIND_DTOD:
-    return "DtoD";
-  case CUPTI_ACTIVITY_MEMCPY_KIND_HTOH:
-    return "HtoH";
-  default:
-    break;
-  }
+/*
+  CUPTI_ACTIVITY_MEMCPY_KIND_HTOD:
+  CUPTI_ACTIVITY_MEMCPY_KIND_DTOH:
+  CUPTI_ACTIVITY_MEMCPY_KIND_HTOA:
+  CUPTI_ACTIVITY_MEMCPY_KIND_ATOH:
+  CUPTI_ACTIVITY_MEMCPY_KIND_ATOA:
+  CUPTI_ACTIVITY_MEMCPY_KIND_ATOD:
+  CUPTI_ACTIVITY_MEMCPY_KIND_DTOA:
+  CUPTI_ACTIVITY_MEMCPY_KIND_DTOD:
+  CUPTI_ACTIVITY_MEMCPY_KIND_HTOH:
+*/
 
-  return "<unknown>";
-}
-
-const char *CuptiActivityProfiler::getActivityOverheadKindString(CUpti_ActivityOverheadKind kind)
-{
-  switch (kind) {
-  case CUPTI_ACTIVITY_OVERHEAD_DRIVER_COMPILER:
-    return "COMPILER";
-  case CUPTI_ACTIVITY_OVERHEAD_CUPTI_BUFFER_FLUSH:
-    return "BUFFER_FLUSH";
-  case CUPTI_ACTIVITY_OVERHEAD_CUPTI_INSTRUMENTATION:
-    return "INSTRUMENTATION";
-  case CUPTI_ACTIVITY_OVERHEAD_CUPTI_RESOURCE:
-    return "RESOURCE";
-  default:
-    break;
-  }
-
-  return "<unknown>";
-}
+/*
+  CUPTI_ACTIVITY_OVERHEAD_DRIVER_COMPILER:
+  CUPTI_ACTIVITY_OVERHEAD_CUPTI_BUFFER_FLUSH:
+  CUPTI_ACTIVITY_OVERHEAD_CUPTI_INSTRUMENTATION:
+  CUPTI_ACTIVITY_OVERHEAD_CUPTI_RESOURCE:
+*/
 
 void CUPTIAPI CuptiActivityProfiler::bufferRequested(uint8_t **buffer, size_t *size, size_t *maxNumRecords)
 {
@@ -146,7 +123,7 @@ void CUPTIAPI CuptiActivityProfiler::bufferCompleted(CUcontext ctx, uint32_t str
         }
         else if(record->kind == CUPTI_ACTIVITY_KIND_MEMCPY)
         {
-          CUpti_ActivityMemcpy2 *memcpy_record = (CUpti_ActivityMemcpy *) record;
+          CUpti_ActivityMemcpy2 *memcpy_record = (CUpti_ActivityMemcpy2 *) record;
           if(memcpy_record->copyKind==CUPTI_ACTIVITY_MEMCPY_KIND_HTOD)
           {
              m_memcpy_h2d_ctr++;
@@ -193,6 +170,11 @@ void CUPTIAPI CuptiActivityProfiler::bufferCompleted(CUcontext ctx, uint32_t str
       printf("Dropped %u activity records\n", (unsigned int) dropped);
     }
 
+    //reset counters
+    m_kernel_ctr=m_memcpy_h2d_ctr=m_memcpy_d2h_ctr=m_overhead_ctr=0;
+    m_kernel_cumul_occ=m_memcpy_h2d_cumul_occ=m_memcpy_d2h_cumul_occ=m_overhead_cumul_occ=0;
+    m_kernel_window_start=ULLONG_MAX;
+    m_kernel_window_end=0;
   }
 
   free(buffer);

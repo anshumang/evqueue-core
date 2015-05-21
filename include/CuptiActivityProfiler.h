@@ -21,6 +21,8 @@
 #define _CUPTI_ACTIVITY_PROFILER_H_
 
 #include <cstdio>
+#include <climits>
+#include <iostream>
 #include <cupti.h>
 
 #define CUPTI_CALL(call)                                                \
@@ -40,6 +42,16 @@
 #define ALIGN_BUFFER(buffer, align)                                            \
   (((uintptr_t) (buffer) & ((align)-1)) ? ((buffer) + (align) - ((uintptr_t) (buffer) & ((align)-1))) : (buffer))
 
+typedef struct {
+  int32_t grid;
+  int64_t start;
+  int64_t running;
+} long_running_t;
+
+typedef struct {
+  int64_t start;
+  int64_t idle;
+} long_idle_t;
 
 class CuptiActivityProfiler
 {
@@ -47,11 +59,11 @@ class CuptiActivityProfiler
           CuptiActivityProfiler(void);
           ~CuptiActivityProfiler(void);
      private:
-          const char *getMemcpyKindString(CUpti_ActivityMemcpyKind kind);
-          const char *getActivityOverheadKindString(CUpti_ActivityOverheadKind kind);
           void CUPTIAPI bufferRequested(uint8_t **buffer, size_t *size, size_t *maxNumRecords);
           void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer, size_t size, size_t validSize);
           uint64_t m_start_timestamp;
+          uint32_t m_kernel_ctr, m_memcpy_h2d_ctr, m_memcpy_d2h_ctr, m_overhead_ctr;
+          uint64_t m_kernel_window_start, m_kernel_window_end, m_kernel_cumul_occ, m_memcpy_h2d_cumul_occ, m_memcpy_d2h_cumul_occ, m_overhead_cumul_occ;
 };
 
 #endif
