@@ -100,6 +100,7 @@ void CUPTIAPI CuptiActivityProfiler::bufferCompleted(CUcontext ctx, uint32_t str
 {
   CUptiResult status;
   CUpti_Activity *record = NULL;
+  unsigned long long last_end=0;
 
   if (validSize > 0) {
 
@@ -107,6 +108,76 @@ void CUPTIAPI CuptiActivityProfiler::bufferCompleted(CUcontext ctx, uint32_t str
       status = cuptiActivityGetNextRecord(buffer, validSize, &record);
       if (status == CUPTI_SUCCESS) {
         //printActivity(record);
+        if((record->kind == CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL)||(record->kind == CUPTI_ACTIVITY_KIND_KERNEL))
+        {
+          CUpti_ActivityKernel2 *kernel_record = (CUpti_ActivityKernel2 *) record;
+          m_kernel_ctr++;
+          if(kernel_record->start < m_kernel_window_start){
+            m_kernel_window_start = kernel_record->start; //gets updated once
+          } 
+          if(kernel_record->end > m_kernel_window_end){
+            m_kernel_window_end = kernel_record->end; //gets updated with each new record
+          }
+          /*valid only for single stream*/
+          unsigned long long running = kernel_record->end - kernel_record->start;
+          m_kernel_cumul_occ+=running; 
+          if(running > 10e6) /*used for >10 ms*/
+          {
+            long_running_t tmp;
+            tmp.grid = (kernel_record->gridX) * (kernel_record->gridY) * (kernel_record->gridZ);
+            tmp.start = kernel_record->start;
+            tmp.running = running;
+          }
+          unsigned long long idle=0;
+          if(last_end>0)
+          {
+             idle = kernel_record->start - last_end;
+             if(idle > 10e6) /*couldn't use for >10 ms*/
+             {
+               long_idle_t tmp;
+               tmp.start = last_end;
+               tmp.idle = idle;
+             } 
+          }
+          else
+          {
+             last_end = kernel_record->end;
+          }
+        }
+        else if(record->kind == CUPTI_ACTIVITY_KIND_MEMCPY)
+        {
+          CUpti_ActivityMemcpy2 *memcpy_record = (CUpti_ActivityMemcpy *) record;
+          if(memcpy_record->copyKind==CUPTI_ACTIVITY_MEMCPY_KIND_HTOD)
+          {
+             m_memcpy_h2d_ctr++;
+             /*valid only for single stream*/
+             unsigned long long running = memcpy_record->end - memcpy_record->start;
+             m_memcpy_h2d_cumul_occ+=running; 
+	  }
+          else if(memcpy_record->copyKind==CUPTI_ACTIVITY_MEMCPY_KIND_DTOH)
+          {
+             m_memcpy_d2h_ctr++;
+             /*valid only for single stream*/
+             unsigned long long running = memcpy_record->end - memcpy_record->start;
+             m_memcpy_d2h_cumul_occ+=running; 
+          }
+          else
+          {
+             std::cerr<< "Unhandled memcpy record type" << std::endl;
+          }
+        }
+        else if(record->kind == CUPTI_ACTIVITY_KIND_OVERHEAD)
+        {
+          CUpti_ActivityOverhead *overhead_record = (CUpti_ActivityOverhead *) record;
+	  m_overhead_ctr++;
+	  /*valid only for single stream*/
+	  unsigned long long running = overhead_record->end - overhead_record->start;
+	  m_overhead_cumul_occ+=running;
+        }
+        else
+        {
+           std::cerr<< "Unhandled record type" << std::endl;
+        }
       }
       else if (status == CUPTI_ERROR_MAX_LIMIT_REACHED)
         break;
