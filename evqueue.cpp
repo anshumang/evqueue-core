@@ -98,7 +98,8 @@ int main(int argc,const char **argv)
 	const char *config_filename = 0;
 	bool daemonize = false;
 	bool daemonized = false;
-	
+
+/*	
 	for(int i=1;i<argc;i++)
 	{
 		if(strcmp(argv[i],"--daemon")==0)
@@ -125,10 +126,13 @@ int main(int argc,const char **argv)
 		tools_print_usage();
 		return -1;
 	}
+*/
 	
 	// Initialize external libraries
+/*
 	mysql_library_init(0,0,0);
 	XQillaPlatformUtils::initialize();
+*/
 	
 	openlog("evqueue",0,LOG_DAEMON);
 	
@@ -153,9 +157,11 @@ int main(int argc,const char **argv)
 	try
 	{
 		// Read configuration
-		Configuration *config;
+		Configuration *config = new Configuration();
+                /*
 		config = ConfigurationReader::Read(config_filename);
-		
+		*/
+
 		// Create logger as soon as possible
 		Logger *logger = new Logger();
 		
@@ -174,8 +180,10 @@ int main(int argc,const char **argv)
 			throw Exception("core","Unable to set requested UID");
 		
 		// Check database connection
+/*
 		DB db;
 		db.Ping();
+*/
 		
 		if(daemonize)
 		{
@@ -215,7 +223,9 @@ int main(int argc,const char **argv)
 		RetrySchedules *retry_schedules = new RetrySchedules();
 		
 		// Check if workflows are to resume (we have to resume them before starting ProcessManager)
-		db.Query("SELECT workflow_instance_id, workflow_schedule_id FROM t_workflow_instance WHERE workflow_instance_status='EXECUTING'");
+		//db.Query("SELECT workflow_instance_id, workflow_schedule_id FROM t_workflow_instance WHERE workflow_instance_status='EXECUTING'");
+
+#if 0
 		while(db.FetchRow())
 		{
 			Logger::Log(LOG_NOTICE,"[WID %d] Resuming",db.GetFieldInt(0));
@@ -260,6 +270,7 @@ int main(int argc,const char **argv)
 					delete workflow_schedule;
 			}
 		}
+#endif
 		
 		// Start Process Manager (Forker & Gatherer)
 		ProcessManager *pm = new ProcessManager();
