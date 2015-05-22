@@ -24,6 +24,8 @@
 #include <climits>
 #include <iostream>
 #include <cupti.h>
+#include <nn.h>
+#include <pipeline.h>
 
 #define CUPTI_CALL(call)                                                \
   do {                                                                  \

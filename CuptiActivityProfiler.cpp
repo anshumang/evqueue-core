@@ -170,6 +170,9 @@ void CUPTIAPI CuptiActivityProfiler::bufferCompleted(CUcontext ctx, uint32_t str
       printf("Dropped %u activity records\n", (unsigned int) dropped);
     }
 
+    //Sending CUPTI profiling info
+    int sock = nn_socket (AF_SP, NN_PUSH);
+
     //reset counters
     m_kernel_ctr=m_memcpy_h2d_ctr=m_memcpy_d2h_ctr=m_overhead_ctr=0;
     m_kernel_cumul_occ=m_memcpy_h2d_cumul_occ=m_memcpy_d2h_cumul_occ=m_overhead_cumul_occ=0;
