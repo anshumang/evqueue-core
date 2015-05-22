@@ -25,10 +25,11 @@
 class EvqueueManager
 {
     public:
-          static EvqueueClient *Create(void);
-          static EvqueueClient *Destroy(void);
+          EvqueueManager(void);
+          ~EvqueueManager(void);
+          void synch(void);
     private:
           EvqueueClient *m_evqueue_client;
-}
+};
 
 #endif

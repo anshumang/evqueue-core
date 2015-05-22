@@ -27,8 +27,9 @@ class EvqueueClient
     public:
           EvqueueClient(void);
           ~EvqueueClient(void);
+          void synch(void);
     private:
           CuptiActivityProfiler* m_cupti_activity_profiler;
-}
+};
 
 #endif

@@ -19,17 +19,32 @@
 
 #include <CuptiActivityProfiler.h>
 
+static uint64_t m_start_timestamp;
+static uint32_t m_kernel_ctr, m_memcpy_h2d_ctr, m_memcpy_d2h_ctr, m_overhead_ctr;
+static uint64_t m_kernel_window_start, m_kernel_window_end, m_kernel_cumul_occ, m_memcpy_h2d_cumul_occ, m_memcpy_d2h_cumul_occ, m_overhead_cumul_occ;
+
 CuptiActivityProfiler::CuptiActivityProfiler(void)
 {
+  std::cout << "CuptiActivityProfiler CTOR" << std::endl;
+  size_t attrValue = 0, attrValueSize = sizeof(size_t);
+  attrValue = 1024;
+  CUPTI_CALL(cuptiActivitySetAttribute(CUPTI_ACTIVITY_ATTR_DEVICE_BUFFER_SIZE, &attrValueSize, &attrValue));
+  attrValue = 1;
+  CUPTI_CALL(cuptiActivitySetAttribute(CUPTI_ACTIVITY_ATTR_DEVICE_BUFFER_POOL_LIMIT, &attrValueSize, &attrValue));
   CUPTI_CALL(cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY));
   CUPTI_CALL(cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL));
   CUPTI_CALL(cuptiActivityEnable(CUPTI_ACTIVITY_KIND_OVERHEAD));
-  CUPTI_CALL(cuptiActivityRegisterCallbacks(reinterpret_cast<void (*)(unsigned char**, long unsigned int*, long unsigned int*)>(&CuptiActivityProfiler::bufferRequested), reinterpret_cast<void (*)(CUctx_st*, unsigned int, unsigned char*, long unsigned int, long unsigned int)>(&CuptiActivityProfiler::bufferCompleted)));
+  //CUPTI_CALL(cuptiActivityRegisterCallbacks(reinterpret_cast<void (*)(unsigned char**, long unsigned int*, long unsigned int*)>(&CuptiActivityProfiler::bufferRequested), reinterpret_cast<void (*)(CUctx_st*, unsigned int, unsigned char*, long unsigned int, long unsigned int)>(&CuptiActivityProfiler::bufferCompleted)));
+  //CUPTI_CALL(cuptiActivityRegisterCallbacks(reinterpret_cast<void (*)(unsigned char**, long unsigned int*, long unsigned int*)>(&CuptiActivityProfiler::bufferRequested), bufferCompleted));
   CUPTI_CALL(cuptiGetTimestamp(&m_start_timestamp));
   m_kernel_ctr=m_memcpy_h2d_ctr=m_memcpy_d2h_ctr=m_overhead_ctr=0;
   m_kernel_cumul_occ=m_memcpy_h2d_cumul_occ=m_memcpy_d2h_cumul_occ=m_overhead_cumul_occ=0;
   m_kernel_window_start=ULLONG_MAX;
   m_kernel_window_end=0;
+
+  //Sending CUPTI profiling info
+  //int sock = nn_socket (AF_SP, NN_PUSH);
+
 }
 
 CuptiActivityProfiler::~CuptiActivityProfiler(void)
@@ -39,6 +54,12 @@ CuptiActivityProfiler::~CuptiActivityProfiler(void)
   CUPTI_CALL(cuptiActivityDisable(CUPTI_ACTIVITY_KIND_OVERHEAD));
   CUPTI_CALL(cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE));
 
+}
+
+void CuptiActivityProfiler::synch(void)
+{
+   std::cerr << "Synch " << std::endl;
+   CUPTI_CALL(cuptiActivityFlushAll(0));
 }
 
 /*
@@ -60,8 +81,10 @@ CuptiActivityProfiler::~CuptiActivityProfiler(void)
   CUPTI_ACTIVITY_OVERHEAD_CUPTI_RESOURCE:
 */
 
+#if 0
 void CUPTIAPI CuptiActivityProfiler::bufferRequested(uint8_t **buffer, size_t *size, size_t *maxNumRecords)
 {
+  std::cerr << "bufferRequested" << std::endl;
   uint8_t *bfr = (uint8_t *) malloc(BUF_SIZE + ALIGN_SIZE);
   if (bfr == NULL) {
     printf("Error: out of memory\n");
@@ -74,7 +97,9 @@ void CUPTIAPI CuptiActivityProfiler::bufferRequested(uint8_t **buffer, size_t *s
 }
 
 void CUPTIAPI CuptiActivityProfiler::bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer, size_t size, size_t validSize)
+//void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer, size_t size, size_t validSize)
 {
+  std::cerr << "bufferCompleted with " << validSize << " bytes of records"  << std::endl;
   CUptiResult status;
   CUpti_Activity *record = NULL;
   unsigned long long last_end=0;
@@ -170,8 +195,11 @@ void CUPTIAPI CuptiActivityProfiler::bufferCompleted(CUcontext ctx, uint32_t str
       printf("Dropped %u activity records\n", (unsigned int) dropped);
     }
 
-    //Sending CUPTI profiling info
-    int sock = nn_socket (AF_SP, NN_PUSH);
+    std::cerr << 
+    " # of kernels : " << m_kernel_ctr <<
+    " Time window(in ns) : " << m_kernel_window_end - m_kernel_window_start <<
+    " Used for(in ns) : " << m_kernel_cumul_occ <<
+    std::endl;
 
     //reset counters
     m_kernel_ctr=m_memcpy_h2d_ctr=m_memcpy_d2h_ctr=m_overhead_ctr=0;
@@ -182,4 +210,4 @@ void CUPTIAPI CuptiActivityProfiler::bufferCompleted(CUcontext ctx, uint32_t str
 
   free(buffer);
 }
-
+#endif

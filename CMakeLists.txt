@@ -9,8 +9,11 @@ include_directories(include /usr/include /usr/local/cuda/include /usr/local/cuda
 add_library(cupti SHARED IMPORTED)
 set_property(TARGET cupti PROPERTY IMPORTED_LOCATION "/usr/local/cuda/extras/CUPTI/lib64/libcupti.so")
 
-add_library(nanomsg SHARED IMPORTED)
-set_property(TARGET nanomsg PROPERTY IMPORTED_LOCATION "/opt/data1/share/users/anshuman/nanomsg/.libs/libnanomsg.so")
+add_library(nanomsg STATIC IMPORTED)
+set_property(TARGET nanomsg PROPERTY IMPORTED_LOCATION "/opt/data1/share/users/anshuman/nanomsg/.libs/libnanomsg.a")
+
+add_library(anl SHARED IMPORTED)
+set_property(TARGET anl PROPERTY IMPORTED_LOCATION "/lib/x86_64-linux-gnu/libanl-2.19.so")
 
 target_link_libraries(evqueue mysqlclient)
 target_link_libraries(evqueue pthread)
@@ -19,6 +22,7 @@ target_link_libraries(evqueue xqilla)
 target_link_libraries(evqueue rt)
 target_link_libraries(evqueue cupti)
 target_link_libraries(evqueue nanomsg)
+target_link_libraries(evqueue anl)
 
 project(evqueue_monitor)
 
@@ -26,7 +30,7 @@ add_executable(evqueue_monitor evqueue_monitor.cpp)
 
 include_directories(include /usr/include)
 
-add_library(evqueue_client Configuration.cpp ConfigurationReader.cpp DB.cpp Exception.cpp Queue.cpp QueuePool.cpp WorkflowInstance.cpp WorkflowInstances.cpp Scheduler.cpp Retrier.cpp SocketQuerySAX2Handler.cpp ProcessManager.cpp WorkflowParameters.cpp handle_connection.cpp Statistics.cpp NetworkInputSource.cpp BinNetworkInputStream.cpp Schedule.cpp WorkflowSchedule.cpp WorkflowScheduler.cpp Tasks.cpp Task.cpp Workflow.cpp Workflows.cpp Logger.cpp GarbageCollector.cpp RetrySchedule.cpp RetrySchedules.cpp SequenceGenerator.cpp tools.cpp CuptiActivityProfiler.cpp)
+add_library(evqueue_client Configuration.cpp ConfigurationReader.cpp DB.cpp Exception.cpp Queue.cpp QueuePool.cpp WorkflowInstance.cpp WorkflowInstances.cpp Scheduler.cpp Retrier.cpp SocketQuerySAX2Handler.cpp ProcessManager.cpp WorkflowParameters.cpp handle_connection.cpp Statistics.cpp NetworkInputSource.cpp BinNetworkInputStream.cpp Schedule.cpp WorkflowSchedule.cpp WorkflowScheduler.cpp Tasks.cpp Task.cpp Workflow.cpp Workflows.cpp Logger.cpp GarbageCollector.cpp RetrySchedule.cpp RetrySchedules.cpp SequenceGenerator.cpp tools.cpp CuptiActivityProfiler.cpp EvqueueClient.cpp EvqueueManager.cpp)
 
 install(TARGETS evqueue evqueue_monitor DESTINATION bin)
 install(FILES etc/evqueue.conf DESTINATION /etc)

@@ -28,3 +28,8 @@ EvqueueClient::~EvqueueClient(void)
 {
     delete m_cupti_activity_profiler;
 }
+
+void EvqueueClient::synch(void)
+{
+    m_cupti_activity_profiler->synch();
+}
