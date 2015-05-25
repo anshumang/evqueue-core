@@ -26,6 +26,8 @@ static uint32_t m_kernel_ctr, m_memcpy_h2d_ctr, m_memcpy_d2h_ctr, m_overhead_ctr
 static uint64_t m_kernel_window_start, m_kernel_window_end, m_kernel_cumul_occ, m_memcpy_h2d_window_start, m_memcpy_h2d_window_end, m_memcpy_h2d_cumul_occ, m_memcpy_d2h_window_start, m_memcpy_d2h_window_end, m_memcpy_d2h_cumul_occ, m_overhead_window_start, m_overhead_window_end, m_overhead_cumul_occ;
 static bool done=false;
 static uint64_t m_last_kernel_end, m_last_api_end, m_last_memcpy_end, m_last_memset_end, m_last_overhead_end;
+int m_sock;
+const char *m_url;
 
 void CUPTIAPI bufferRequested(uint8_t **buffer, size_t *size, size_t *maxNumRecords)
 {
@@ -243,6 +245,9 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
       printf("Dropped %u activity records\n", (unsigned int) dropped);
     }
 
+    int bytes = nn_send (m_sock, &m_last_kernel_end, sizeof(int64_t), 0);
+    assert (bytes == sizeof(int64_t));
+
     //std::cerr << m_kernel_window_start - m_start_timestamp << " " << m_memcpy_d2h_window_start - m_start_timestamp << " " << m_overhead_window_start - m_start_timestamp <<
     //std::endl <<
     //std::cerr << m_kernel_window_end - m_start_timestamp << " " << m_memcpy_d2h_window_end - m_start_timestamp << " " << m_overhead_window_end - m_start_timestamp <<
@@ -277,7 +282,10 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
 EvqueueManager::EvqueueManager(void)
 {
   //Sending CUPTI profiling info
-  int sock = nn_socket (AF_SP, NN_PUSH);
+  m_url = "ipc:///tmp/pipeline.ipc";
+  m_sock = nn_socket (AF_SP, NN_PUSH);
+  assert (m_sock >= 0);
+  assert (nn_connect (m_sock, m_url) >= 0);
 
   size_t attrValue = 0, attrValueSize = sizeof(size_t);
   attrValue = 256*1024;
@@ -303,6 +311,7 @@ EvqueueManager::EvqueueManager(void)
 
 EvqueueManager::~EvqueueManager(void)
 {
+  nn_shutdown (m_sock, 0);
   CUPTI_CALL(cuptiActivityDisable(CUPTI_ACTIVITY_KIND_RUNTIME));
   CUPTI_CALL(cuptiActivityDisable(CUPTI_ACTIVITY_KIND_DRIVER));
   CUPTI_CALL(cuptiActivityDisable(CUPTI_ACTIVITY_KIND_MEMCPY));

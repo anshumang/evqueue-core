@@ -20,6 +20,7 @@
 #ifndef _EVQUEUE_MANAGER_H_
 #define _EVQUEUE_MANAGER_H_
 
+#include <cassert>
 #include <EvqueueClient.h>
 
 class EvqueueManager

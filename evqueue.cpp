@@ -18,6 +18,7 @@
  */
 
 #include <stdio.h>
+#include <iostream>
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
@@ -57,6 +58,9 @@
 #include <tools.h>
 
 #include <xqilla/xqilla-dom3.hpp>
+
+#include <nn.h>
+#include <pipeline.h>
 
 //int listen_socket;//Moved definition to WorkflowInstance.cpp because this file is not built when generating the lib
 
@@ -136,7 +140,7 @@ int main(int argc,const char **argv)
 	
 	openlog("evqueue",0,LOG_DAEMON);
 	
-	struct sigaction sa;
+	/*struct sigaction sa;
 	sigset_t block_mask;
 	
 	sigemptyset(&block_mask);
@@ -153,7 +157,7 @@ int main(int argc,const char **argv)
 	sigaction(SIGINT,&sa,0);
 	sigaction(SIGTERM,&sa,0);
 	sigaction(SIGUSR1,&sa,0);
-	
+	*/
 	try
 	{
 		// Read configuration
@@ -166,18 +170,18 @@ int main(int argc,const char **argv)
 		Logger *logger = new Logger();
 		
 		// Open pid file before fork to eventually print errors
-		FILE *pidfile = fopen(config->Get("core.pidfile"),"w");
-		if(pidfile==0)
-			throw Exception("core","Unable to open pid file");
+		//FILE *pidfile = fopen(config->Get("core.pidfile"),"w");
+		//if(pidfile==0)
+		//	throw Exception("core","Unable to open pid file");
 		
-		int gid = atoi(config->Get("core.gid"));
-		if(gid!=0 && setgid(gid)!=0)
-			throw Exception("core","Unable to set requested GID");
+		//int gid = atoi(config->Get("core.gid"));
+		//if(gid!=0 && setgid(gid)!=0)
+		//	throw Exception("core","Unable to set requested GID");
 		
 		// Set uid/gid if requested
-		int uid = atoi(config->Get("core.uid"));
-		if(uid!=0 && setuid(uid)!=0)
-			throw Exception("core","Unable to set requested UID");
+		//int uid = atoi(config->Get("core.uid"));
+		//if(uid!=0 && setuid(uid)!=0)
+		//	throw Exception("core","Unable to set requested UID");
 		
 		// Check database connection
 /*
@@ -192,35 +196,35 @@ int main(int argc,const char **argv)
 		}
 		
 		// Write pid after daemonization
-		fprintf(pidfile,"%d\n",getpid());
-		fclose(pidfile);
+		//fprintf(pidfile,"%d\n",getpid());
+		//fclose(pidfile);
 		
 		// Instanciate sequence generator, used for savepoint level 0 or 1
-		SequenceGenerator *seq = new SequenceGenerator();
+		//SequenceGenerator *seq = new SequenceGenerator();
 		
 		// Create statistics counter
-		Statistics *stats = new Statistics();
+		//Statistics *stats = new Statistics();
 		
 		// Start retrier
-		Retrier *retrier = new Retrier();
+		//Retrier *retrier = new Retrier();
 		
 		// Start scheduler
-		WorkflowScheduler *scheduler = new WorkflowScheduler();
+		//WorkflowScheduler *scheduler = new WorkflowScheduler();
 		
 		// Create queue pool
-		QueuePool *pool = new QueuePool();
+		//QueuePool *pool = new QueuePool();
 		
 		// Instanciate workflow instances map
-		WorkflowInstances *workflow_instances = new WorkflowInstances();
+		//WorkflowInstances *workflow_instances = new WorkflowInstances();
 		
 		// Instanciate workflows list
-		Workflows *workflows = new Workflows();
+		//Workflows *workflows = new Workflows();
 		
 		// Instanciate tasks list
-		Tasks *tasks = new Tasks();
+		//Tasks *tasks = new Tasks();
 		
 		// Instanciate retry schedules list
-		RetrySchedules *retry_schedules = new RetrySchedules();
+		//RetrySchedules *retry_schedules = new RetrySchedules();
 		
 		// Check if workflows are to resume (we have to resume them before starting ProcessManager)
 		//db.Query("SELECT workflow_instance_id, workflow_schedule_id FROM t_workflow_instance WHERE workflow_instance_status='EXECUTING'");
@@ -273,52 +277,62 @@ int main(int argc,const char **argv)
 #endif
 		
 		// Start Process Manager (Forker & Gatherer)
-		ProcessManager *pm = new ProcessManager();
+		//ProcessManager *pm = new ProcessManager();
 		
 		// Start garbage GarbageCollector
-		GarbageCollector *gc = new GarbageCollector();
+		//GarbageCollector *gc = new GarbageCollector();
 		
 		Logger::Log(LOG_NOTICE,"evqueue core started");
 		
-		int re,s,optval;
-		struct sockaddr_in local_addr,remote_addr;
-		socklen_t remote_addr_len;
+		//int re,s,optval;
+		//struct sockaddr_in local_addr,remote_addr;
+		//socklen_t remote_addr_len;
 		
+                const char *url="ipc:///tmp/pipeline.ipc";
 		// Create listen socket
-		listen_socket=socket(PF_INET,SOCK_STREAM,0);
+		//listen_socket=socket(PF_INET,SOCK_STREAM,0);
+                int sock = nn_socket (AF_SP, NN_PULL);
+                assert (sock >= 0);
 		
 		// Configure socket
-		optval=1;
-		setsockopt(listen_socket,SOL_SOCKET,SO_REUSEADDR,&optval,sizeof(int));
+		//optval=1;
+		//setsockopt(listen_socket,SOL_SOCKET,SO_REUSEADDR,&optval,sizeof(int));
 		
 		// Bind socket
-		memset(&local_addr,0,sizeof(struct sockaddr_in));
-		local_addr.sin_family=AF_INET;
-		if(strcmp(config->Get("network.bind.ip"),"*")==0)
-			local_addr.sin_addr.s_addr=htonl(INADDR_ANY);
-		else
-			local_addr.sin_addr.s_addr=inet_addr(config->Get("network.bind.ip"));
-		local_addr.sin_port = htons(atoi(config->Get("network.bind.port")));
-		re=bind(listen_socket,(struct sockaddr *)&local_addr,sizeof(struct sockaddr_in));
-		if(re==-1)
-			throw Exception("core","Unable to bind listen socket");
+		//memset(&local_addr,0,sizeof(struct sockaddr_in));
+		//local_addr.sin_family=AF_INET;
+		//if(strcmp(config->Get("network.bind.ip"),"*")==0)
+		//	local_addr.sin_addr.s_addr=htonl(INADDR_ANY);
+		//else
+		//	local_addr.sin_addr.s_addr=inet_addr(config->Get("network.bind.ip"));
+		//local_addr.sin_port = htons(atoi(config->Get("network.bind.port")));
+		//re=bind(listen_socket,(struct sockaddr *)&local_addr,sizeof(struct sockaddr_in));
+		//if(re==-1)
+		//	throw Exception("core","Unable to bind listen socket");
+                assert (nn_bind (sock, url) >= 0);
 		
 		// Listen on socket
-		re=listen(listen_socket,config->GetInt("network.listen.backlog"));
-		if(re==-1)
-			throw Exception("core","Unable to listen on socket");
-		Logger::Log(LOG_NOTICE,"Listen backlog set to %d",config->GetInt("network.listen.backlog"));
+		//re=listen(listen_socket,config->GetInt("network.listen.backlog"));
+		//if(re==-1)
+		//	throw Exception("core","Unable to listen on socket");
+		//Logger::Log(LOG_NOTICE,"Listen backlog set to %d",config->GetInt("network.listen.backlog"));
 		
-		char *ptr,*parameters;
+		//char *ptr,*parameters;
 		
-		Logger::Log(LOG_NOTICE,"Accepting connection on port %s",config->Get("network.bind.port"));
+		//Logger::Log(LOG_NOTICE,"Accepting connection on port %s",config->Get("network.bind.port"));
 		
 		// Loop for incoming connections
 		int len,*sp;
 		while(1)
 		{
-			remote_addr_len=sizeof(struct sockaddr);
-			s = accept(listen_socket,(struct sockaddr *)&remote_addr,&remote_addr_len);
+			//remote_addr_len=sizeof(struct sockaddr);
+			//s = accept(listen_socket,(struct sockaddr *)&remote_addr,&remote_addr_len);
+                        void *buf = NULL;
+                        int bytes = nn_recv (sock, &buf, NN_MSG, 0);
+                        assert (bytes >= 0);
+                        std::cout << "Received : " << (int64_t)buf << std::endl;
+                        nn_freemsg (buf);
+                        #if 0
 			if(s<0)
 			{
 				if(errno==EINTR)
@@ -369,14 +383,16 @@ int main(int argc,const char **argv)
 				
 				return 0;
 			}
+                        #endif
 			
-			sp = new int;
+			/*sp = new int;
 			*sp = s;
 			pthread_t thread;
 			pthread_attr_t thread_attr;
 			pthread_attr_init(&thread_attr);
 			pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
 			pthread_create(&thread, &thread_attr, handle_connection, sp);
+                        */
 		}
 	}
 	catch(Exception &e)
