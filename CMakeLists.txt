@@ -1,19 +1,27 @@
 cmake_minimum_required(VERSION 2.8)
 
+SET_PROPERTY(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS TRUE)
+
+add_library(cupti SHARED IMPORTED)
+set_property(TARGET cupti PROPERTY IMPORTED_LOCATION "/usr/local/cuda/extras/CUPTI/lib64/libcupti.so")
+
+add_library(nanomsg SHARED IMPORTED)
+set_property(TARGET nanomsg PROPERTY IMPORTED_LOCATION "/opt/data1/share/users/anshuman/nanomsg/.libs/libnanomsg.so")
+
+#add_library(anl SHARED IMPORTED)
+#set_property(TARGET anl PROPERTY IMPORTED_LOCATION "/lib/x86_64-linux-gnu/libanl-2.19.so")
+
+add_library(mysqlclient SHARED IMPORTED)
+set_property(TARGET mysqlclient PROPERTY IMPORTED_LOCATION "/usr/lib/x86_64-linux-gnu/libmysqlclient.so")
+
+add_library(xercs-c SHARED IMPORTED)
+set_property(TARGET xercs-c PROPERTY IMPORTED_LOCATION "/usr/lib/x86_64-linux-gnu/libxercs-c.so")
+
 project(evqueue)
 
 add_executable(evqueue evqueue.cpp Configuration.cpp ConfigurationReader.cpp DB.cpp Exception.cpp Queue.cpp QueuePool.cpp WorkflowInstance.cpp WorkflowInstances.cpp Scheduler.cpp Retrier.cpp SocketQuerySAX2Handler.cpp ProcessManager.cpp WorkflowParameters.cpp handle_connection.cpp Statistics.cpp NetworkInputSource.cpp BinNetworkInputStream.cpp Schedule.cpp WorkflowSchedule.cpp WorkflowScheduler.cpp Tasks.cpp Task.cpp Workflow.cpp Workflows.cpp Logger.cpp GarbageCollector.cpp RetrySchedule.cpp RetrySchedules.cpp SequenceGenerator.cpp tools.cpp CuptiActivityProfiler.cpp)
 
 include_directories(include /usr/include /usr/local/cuda/include /usr/local/cuda/extras/CUPTI/include /opt/data1/share/users/anshuman/nanomsg/src)
-
-add_library(cupti SHARED IMPORTED)
-set_property(TARGET cupti PROPERTY IMPORTED_LOCATION "/usr/local/cuda/extras/CUPTI/lib64/libcupti.so")
-
-add_library(nanomsg STATIC IMPORTED)
-set_property(TARGET nanomsg PROPERTY IMPORTED_LOCATION "/opt/data1/share/users/anshuman/nanomsg/.libs/libnanomsg.a")
-
-add_library(anl SHARED IMPORTED)
-set_property(TARGET anl PROPERTY IMPORTED_LOCATION "/lib/x86_64-linux-gnu/libanl-2.19.so")
 
 target_link_libraries(evqueue mysqlclient)
 target_link_libraries(evqueue pthread)
@@ -22,7 +30,7 @@ target_link_libraries(evqueue xqilla)
 target_link_libraries(evqueue rt)
 target_link_libraries(evqueue cupti)
 target_link_libraries(evqueue nanomsg)
-target_link_libraries(evqueue anl)
+#target_link_libraries(evqueue anl)
 
 project(evqueue_monitor)
 
@@ -30,7 +38,19 @@ add_executable(evqueue_monitor evqueue_monitor.cpp)
 
 include_directories(include /usr/include)
 
-add_library(evqueue_client Configuration.cpp ConfigurationReader.cpp DB.cpp Exception.cpp Queue.cpp QueuePool.cpp WorkflowInstance.cpp WorkflowInstances.cpp Scheduler.cpp Retrier.cpp SocketQuerySAX2Handler.cpp ProcessManager.cpp WorkflowParameters.cpp handle_connection.cpp Statistics.cpp NetworkInputSource.cpp BinNetworkInputStream.cpp Schedule.cpp WorkflowSchedule.cpp WorkflowScheduler.cpp Tasks.cpp Task.cpp Workflow.cpp Workflows.cpp Logger.cpp GarbageCollector.cpp RetrySchedule.cpp RetrySchedules.cpp SequenceGenerator.cpp tools.cpp CuptiActivityProfiler.cpp EvqueueClient.cpp EvqueueManager.cpp)
+project(evqueue_client)
+
+add_library(evqueue_client SHARED Configuration.cpp ConfigurationReader.cpp DB.cpp Exception.cpp Queue.cpp QueuePool.cpp WorkflowInstance.cpp WorkflowInstances.cpp Scheduler.cpp Retrier.cpp SocketQuerySAX2Handler.cpp ProcessManager.cpp WorkflowParameters.cpp handle_connection.cpp Statistics.cpp NetworkInputSource.cpp BinNetworkInputStream.cpp Schedule.cpp WorkflowSchedule.cpp WorkflowScheduler.cpp Tasks.cpp Task.cpp Workflow.cpp Workflows.cpp Logger.cpp GarbageCollector.cpp RetrySchedule.cpp RetrySchedules.cpp SequenceGenerator.cpp tools.cpp CuptiActivityProfiler.cpp EvqueueClient.cpp EvqueueManager.cpp)
+
+include_directories(include /usr/include /usr/local/cuda/include /usr/local/cuda/extras/CUPTI/include /opt/data1/share/users/anshuman/nanomsg/src)
+
+target_link_libraries(evqueue_client mysqlclient)
+target_link_libraries(evqueue_client pthread)
+target_link_libraries(evqueue_client xerces-c)
+target_link_libraries(evqueue_client xqilla)
+target_link_libraries(evqueue_client rt)
+target_link_libraries(evqueue_client cupti)
+target_link_libraries(evqueue_client nanomsg)
 
 install(TARGETS evqueue evqueue_monitor DESTINATION bin)
 install(FILES etc/evqueue.conf DESTINATION /etc)

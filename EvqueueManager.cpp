@@ -18,6 +18,8 @@
  */
 
 #include <EvqueueManager.h>
+#include <nn.h>
+#include <pipeline.h>
 
 static uint64_t m_start_timestamp;
 static uint32_t m_kernel_ctr, m_memcpy_h2d_ctr, m_memcpy_d2h_ctr, m_overhead_ctr;
@@ -274,6 +276,9 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
 
 EvqueueManager::EvqueueManager(void)
 {
+  //Sending CUPTI profiling info
+  int sock = nn_socket (AF_SP, NN_PUSH);
+
   size_t attrValue = 0, attrValueSize = sizeof(size_t);
   attrValue = 256*1024;
   //CUPTI_CALL(cuptiActivitySetAttribute(CUPTI_ACTIVITY_ATTR_DEVICE_BUFFER_SIZE, &attrValueSize, &attrValue));

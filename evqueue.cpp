@@ -58,7 +58,7 @@
 
 #include <xqilla/xqilla-dom3.hpp>
 
-int listen_socket;
+//int listen_socket;//Moved definition to WorkflowInstance.cpp because this file is not built when generating the lib
 
 void signal_callback_handler(int signum)
 {

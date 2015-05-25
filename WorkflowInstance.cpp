@@ -55,6 +55,8 @@ extern pthread_mutex_t main_mutex;
 extern pthread_cond_t fork_lock;
 extern bool fork_locked,fork_possible;
 
+int listen_socket;
+
 WorkflowInstance::WorkflowInstance(const char *workflow_name,WorkflowParameters *parameters, unsigned int workflow_schedule_id,const char *workflow_host, const char *workflow_user)
 {
 	DB db;
