@@ -245,8 +245,9 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
       printf("Dropped %u activity records\n", (unsigned int) dropped);
     }
 
-    int bytes = nn_send (m_sock, &m_last_kernel_end, sizeof(int64_t), 0);
-    assert (bytes == sizeof(int64_t));
+    std::cout << "Sent : " << m_last_kernel_end << std::endl;
+    int bytes = nn_send (m_sock, &m_last_kernel_end, sizeof(uint64_t), 0);
+    assert (bytes == sizeof(uint64_t));
 
     //std::cerr << m_kernel_window_start - m_start_timestamp << " " << m_memcpy_d2h_window_start - m_start_timestamp << " " << m_overhead_window_start - m_start_timestamp <<
     //std::endl <<
