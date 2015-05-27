@@ -275,7 +275,7 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
     if (dropped != 0) {
       printf("Dropped %u activity records\n", (unsigned int) dropped);
     }
-    msg->save_schedule();
+    save_schedule(*msg);
     std::cout << "Sent bytes : " << msg->m_stream.tellp() << "/" << sizeof(CUpti_ActivityKernel2)*numKernelRecords << std::endl;
     //int bytes = nn_send (m_sock, msg, sizeof(ClientMessage), 0);
     //assert (bytes == sizeof(ClientMessage));

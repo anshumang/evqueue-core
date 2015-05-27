@@ -44,8 +44,18 @@ std::ostream & operator<<(std::ostream &os, const ClientMessage &cm)
      os << "\n" << (*itg).duration;
   }
   std::cout << os.tellp() << std::endl;
+  return os;
 }
 
-void ClientMessage::save_schedule(){
-    m_stream << this;
+void save_schedule(ClientMessage &cm){
+    //m_stream << this;
+    //std::ostringstream oss;
+    //oss << cm;
+    //cm.m_stream << oss.rdbuf();
+    //cout << oss.rdbuf() << endl;
+    cm.m_stream << cm;
+    std::cout << cm.m_stream.tellp() << std::endl;
+    //std::ofstream ofs(filename);
+    //boost::archive::text_oarchive oa(ofs);
+    //oa << this;
 }

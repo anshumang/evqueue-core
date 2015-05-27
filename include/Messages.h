@@ -34,6 +34,8 @@
 
 #include <sstream>
 
+using namespace std;
+
 struct LongKernel
 {
    uint64_t grid[3];
@@ -60,13 +62,18 @@ class ClientMessage
        std::ostringstream m_stream;
 
        friend std::ostream & operator<<(std::ostream &os, const ClientMessage &cm);
+       friend void save_schedule(ClientMessage &cm);
        friend class boost::serialization::access;
        template<class Archive> void serialize(Archive & ar)
        {
          ar & m_long_kernels & m_long_gaps;
        }
-       void save_schedule();
+       //void save_schedule();
+       //void save_schedule(const char *filename);
+       //friend void save_schedule(ClientMessage &cm);
 };
+
+void save_schedule(ClientMessage &cm);
 
 /*std::ostream & operator<<(std::ostream &os, const ClientMessage &cm)
 {
