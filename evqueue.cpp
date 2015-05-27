@@ -330,7 +330,7 @@ int main(int argc,const char **argv)
                         void *buf = NULL;
                         int bytes = nn_recv (sock, &buf, NN_MSG, 0);
                         assert (bytes >= 0);
-                        std::cout << "Received : " << *((int64_t *)buf) << std::endl;
+                        std::cout << "Received bytes : " << bytes << std::endl;
                         nn_freemsg (buf);
                         #if 0
 			if(s<0)

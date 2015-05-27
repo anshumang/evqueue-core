@@ -22,6 +22,7 @@
 
 #include <cassert>
 #include <EvqueueClient.h>
+#include <Messages.h>
 
 class EvqueueManager
 {

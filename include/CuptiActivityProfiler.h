@@ -39,21 +39,11 @@
     }                                                                   \
   } while (0)
 
-#define BUF_SIZE (32 * 1024)
+#define BUF_SIZE (256 * 1024)
+//#define BUF_SIZE (112)
 #define ALIGN_SIZE (8)
 #define ALIGN_BUFFER(buffer, align)                                            \
   (((uintptr_t) (buffer) & ((align)-1)) ? ((buffer) + (align) - ((uintptr_t) (buffer) & ((align)-1))) : (buffer))
-
-typedef struct {
-  int32_t grid;
-  int64_t start;
-  int64_t running;
-} long_running_t;
-
-typedef struct {
-  int64_t start;
-  int64_t idle;
-} long_idle_t;
 
 //extern "C" void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer, size_t size, size_t validSize);
 //extern "C" void CUPTIAPI bufferRequested(uint8_t **buffer, size_t *size, size_t *maxNumRecords);
