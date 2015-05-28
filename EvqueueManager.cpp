@@ -26,7 +26,7 @@ static uint64_t m_start_timestamp;
 static uint32_t m_kernel_ctr, m_memcpy_h2d_ctr, m_memcpy_d2h_ctr, m_overhead_ctr;
 static uint64_t m_kernel_window_start, m_kernel_window_end, m_kernel_cumul_occ, m_memcpy_h2d_window_start, m_memcpy_h2d_window_end, m_memcpy_h2d_cumul_occ, m_memcpy_d2h_window_start, m_memcpy_d2h_window_end, m_memcpy_d2h_cumul_occ, m_overhead_window_start, m_overhead_window_end, m_overhead_cumul_occ;
 static bool done=false;
-static uint64_t m_last_kernel_end, m_last_api_end, m_last_memcpy_end, m_last_memset_end, m_last_overhead_end;
+static uint64_t m_last_kernel_end, m_last_kernel_end_no_offset, m_last_api_end, m_last_memcpy_end, m_last_memset_end, m_last_overhead_end;
 static uint64_t m_last_kernel_grid[3], m_last_kernel_block[3];
 
 int m_sock;
@@ -84,11 +84,10 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
           //}
           if(m_last_kernel_end > 0)
           {
-             //std::cerr << "IDLE-K " << m_last_kernel_end << " " << kernel_record->start - m_last_kernel_end - m_start_timestamp << std::endl;
              /*Gap > 10ms*/
-             if(kernel_record->start - m_last_kernel_end - m_start_timestamp > 10000000)
+             if((kernel_record->start - m_start_timestamp> m_last_kernel_end)&&(kernel_record->start - m_last_kernel_end - m_start_timestamp > 10000000))
              {
-                //std::cout << "Long Gap : " << kernel_record->start - m_last_kernel_end - m_start_timestamp << std::endl;
+                //std::cout << "Gap " << kernel_record->start - m_last_kernel_end - m_start_timestamp << std::endl;
                 LongGap gap;
                 gap.trailing_grid[0]=kernel_record->gridX;
                 gap.trailing_grid[1]=kernel_record->gridY;
@@ -100,6 +99,7 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
                 msg->m_long_gaps.push_back(gap);
              }
              m_last_kernel_end = kernel_record->end - m_start_timestamp;
+             m_last_kernel_end_no_offset = kernel_record->end;
              m_last_kernel_grid[0]=kernel_record->gridX;
              m_last_kernel_grid[1]=kernel_record->gridY;
              m_last_kernel_grid[2]=kernel_record->gridZ;
@@ -110,15 +110,15 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
           else
           {
              m_last_kernel_end = kernel_record->end - m_start_timestamp;
+             m_last_kernel_end_no_offset = kernel_record->end;
           }
 	  /*Use > 10ms*/
           if(kernel_record->end - kernel_record->start > 10000000)
           {
-            //std::cout << "Long Use : " << kernel_record->end - kernel_record->start << std::endl;
+            std::cout << kernel_record->end - kernel_record->start << " " << kernel_record->name << " " << kernel_record->gridX << " " << kernel_record->gridY << " " << kernel_record->gridZ << " " << kernel_record->blockX << " " << kernel_record->blockY << " " << kernel_record->blockZ << " " << std::endl;
             LongKernel use;
             msg->m_long_kernels.push_back(use);
           }
-         //std::cout << "K" << kernel_record->correlationId << " " << kernel_record->start - m_start_timestamp << " " << kernel_record->end - kernel_record->start << std::endl;
 #if 0
           /*valid only for single stream*/
           unsigned long long running = kernel_record->end - kernel_record->start;
@@ -313,6 +313,7 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
 
 EvqueueManager::EvqueueManager(void)
 {
+  std::cout << "EvqueueManager CTOR" << std::endl;
   //Sending CUPTI profiling info
   m_url = "ipc:///tmp/pipeline.ipc";
   m_sock = nn_socket (AF_SP, NN_PUSH);
@@ -320,7 +321,7 @@ EvqueueManager::EvqueueManager(void)
   assert (nn_connect (m_sock, m_url) >= 0);
 
   size_t attrValue = 0, attrValueSize = sizeof(size_t);
-  attrValue = 256 * 1024;
+  attrValue = 32 * 1024 * 1024;
   CUPTI_CALL(cuptiActivitySetAttribute(CUPTI_ACTIVITY_ATTR_DEVICE_BUFFER_SIZE, &attrValueSize, &attrValue));
   attrValue = 1;
   CUPTI_CALL(cuptiActivitySetAttribute(CUPTI_ACTIVITY_ATTR_DEVICE_BUFFER_POOL_LIMIT, &attrValueSize, &attrValue));
