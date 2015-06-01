@@ -207,7 +207,7 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
     }
     save_schedule(*msg);
     std::cout << "Sent bytes : " << msg->m_stream.tellp() << "/" << sizeof(CUpti_ActivityKernel2)*numKernelRecords << std::endl;
-    gEvqm->mComm->send(reinterpret_cast<void **>(&msg), sizeof(ClientMessage));
+    gEvqm->mComm->send(reinterpret_cast<void *>(msg), sizeof(ClientMessage));
   }
 
   free(buffer);
@@ -219,7 +219,9 @@ EvqueueManager::EvqueueManager(void)
   mIposer = new Interposer();
   //Sending CUPTI profiling info
   std::string url("ipc:///tmp/pipeline.ipc");
-  mComm = new Communicator(url);
+  Component who=CLIENT;
+  mComm = new Communicator(url, who);
+  mComm->connect();
 
   size_t attrValue = 0, attrValueSize = sizeof(size_t);
   attrValue = 32 * 1024 * 1024;

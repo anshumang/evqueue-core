@@ -20,6 +20,7 @@
 #ifndef _COMMUNICATION_H
 #define _COMMUNICATION_H
 
+#include <iostream>
 #include <string>
 #include <cassert>
 #include <nn.h>
@@ -27,16 +28,22 @@
 
 using namespace std;
 
+enum Component
+{
+    CLIENT,
+    DAEMON
+};
+
 struct Communicator
 {
     int mSock;
     std::string mURL;
-    Communicator(std::string& url);
+    Communicator(std::string& url, Component who);
     ~Communicator();
     int connect();
     int bind();
-    int send(void **, size_t);
-    int receive(void **);
+    int send(void *, size_t);
+    int receive(void *);
     int freemsg(void *);
 };
 

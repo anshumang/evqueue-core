@@ -288,7 +288,8 @@ int main(int argc,const char **argv)
 		//socklen_t remote_addr_len;
 		
                 std::string url("ipc:///tmp/pipeline.ipc");
-                Communicator comm(url);
+                Component who=DAEMON;
+                Communicator comm(url, who);
 		// Create listen socket
 		//listen_socket=socket(PF_INET,SOCK_STREAM,0);
 		

@@ -19,10 +19,21 @@
 
 #include <Communicator.h>
 
-Communicator::Communicator(std::string& url)
+Communicator::Communicator(std::string& url, Component who)
         :mURL(url)
 {
-    assert((mSock = nn_socket(AF_SP, NN_PUSH)) >= 0);
+    if(who == CLIENT)
+    {
+       assert((mSock = nn_socket(AF_SP, NN_PUSH)) >= 0);
+    }
+    else if(who == DAEMON)
+    {
+       assert((mSock = nn_socket(AF_SP, NN_PULL)) >= 0);
+    }
+    else
+    {
+       assert(0 && "Component has to be CLIENT or DAEMON");
+    }
 }
 
 Communicator::~Communicator()
@@ -44,9 +55,9 @@ int Communicator::bind()
     return ret;
 }
 
-int Communicator::receive(void **buf)
+int Communicator::receive(void *buf)
 {
-   int bytes = nn_recv(mSock, *buf, NN_MSG, 0);
+   int bytes = nn_recv(mSock, buf, NN_MSG, 0);
    assert(bytes >= 0);
    return bytes;
 }
@@ -58,9 +69,9 @@ int Communicator::freemsg(void *buf)
    return ret;
 }
 
-int Communicator::send(void **buf, size_t size)
+int Communicator::send(void *buf, size_t size)
 {
-   int ret = nn_send(mSock, *buf, size, 0);
-   assert(ret >= 0);
-   return ret;
+   int bytes = nn_send(mSock, buf, size, 0);
+   assert(bytes >= 0);
+   return bytes;
 }
