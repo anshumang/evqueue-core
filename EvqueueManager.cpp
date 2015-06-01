@@ -314,6 +314,7 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
 EvqueueManager::EvqueueManager(void)
 {
   std::cout << "EvqueueManager CTOR" << std::endl;
+  m_interposer = new Interposer();
   //Sending CUPTI profiling info
   m_url = "ipc:///tmp/pipeline.ipc";
   m_sock = nn_socket (AF_SP, NN_PUSH);
@@ -375,4 +376,9 @@ void EvqueueManager::synch(void)
   std::cerr << "Synch" <<std::endl;
   CUPTI_CALL(cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE));
     //m_evqueue_client->synch();
+}
+
+int EvqueueManager::launch(KernelIdentifier kid)
+{
+  return m_interposer->launch(kid);
 }

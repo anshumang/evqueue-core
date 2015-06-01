@@ -23,6 +23,7 @@
 #include <cassert>
 #include <EvqueueClient.h>
 #include <Messages.h>
+#include <Interposer.h>
 
 class EvqueueManager
 {
@@ -30,8 +31,10 @@ class EvqueueManager
           EvqueueManager(void);
           ~EvqueueManager(void);
           void synch(void);
+          int launch(KernelIdentifier kid);
     private:
           EvqueueClient *m_evqueue_client;
+          Interposer *m_interposer;
 };
 
 #endif
