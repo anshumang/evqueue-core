@@ -17,11 +17,7 @@
  * Author: Anshuman Goswami <anshumang@gatech.edu>
  */
 
-#include <CuptiActivityProfiler.h>
-
-static uint64_t m_start_timestamp;
-static uint32_t m_kernel_ctr, m_memcpy_h2d_ctr, m_memcpy_d2h_ctr, m_overhead_ctr;
-static uint64_t m_kernel_window_start, m_kernel_window_end, m_kernel_cumul_occ, m_memcpy_h2d_cumul_occ, m_memcpy_d2h_cumul_occ, m_overhead_cumul_occ;
+#include <CuptiCallbacks.h>
 
 CuptiActivityProfiler::CuptiActivityProfiler(void)
 {
@@ -36,14 +32,6 @@ CuptiActivityProfiler::CuptiActivityProfiler(void)
   CUPTI_CALL(cuptiActivityEnable(CUPTI_ACTIVITY_KIND_OVERHEAD));
   //CUPTI_CALL(cuptiActivityRegisterCallbacks(reinterpret_cast<void (*)(unsigned char**, long unsigned int*, long unsigned int*)>(&CuptiActivityProfiler::bufferRequested), reinterpret_cast<void (*)(CUctx_st*, unsigned int, unsigned char*, long unsigned int, long unsigned int)>(&CuptiActivityProfiler::bufferCompleted)));
   //CUPTI_CALL(cuptiActivityRegisterCallbacks(reinterpret_cast<void (*)(unsigned char**, long unsigned int*, long unsigned int*)>(&CuptiActivityProfiler::bufferRequested), bufferCompleted));
-  CUPTI_CALL(cuptiGetTimestamp(&m_start_timestamp));
-  m_kernel_ctr=m_memcpy_h2d_ctr=m_memcpy_d2h_ctr=m_overhead_ctr=0;
-  m_kernel_cumul_occ=m_memcpy_h2d_cumul_occ=m_memcpy_d2h_cumul_occ=m_overhead_cumul_occ=0;
-  m_kernel_window_start=ULLONG_MAX;
-  m_kernel_window_end=0;
-
-  //Sending CUPTI profiling info
-  //int sock = nn_socket (AF_SP, NN_PUSH);
 
 }
 

@@ -59,8 +59,7 @@
 
 #include <xqilla/xqilla-dom3.hpp>
 
-#include <nn.h>
-#include <pipeline.h>
+#include "Communicator.h"
 
 //int listen_socket;//Moved definition to WorkflowInstance.cpp because this file is not built when generating the lib
 
@@ -288,28 +287,16 @@ int main(int argc,const char **argv)
 		//struct sockaddr_in local_addr,remote_addr;
 		//socklen_t remote_addr_len;
 		
-                const char *url="ipc:///tmp/pipeline.ipc";
+                std::string url("ipc:///tmp/pipeline.ipc");
+                Communicator comm(url);
 		// Create listen socket
 		//listen_socket=socket(PF_INET,SOCK_STREAM,0);
-                int sock = nn_socket (AF_SP, NN_PULL);
-                assert (sock >= 0);
 		
 		// Configure socket
 		//optval=1;
 		//setsockopt(listen_socket,SOL_SOCKET,SO_REUSEADDR,&optval,sizeof(int));
 		
-		// Bind socket
-		//memset(&local_addr,0,sizeof(struct sockaddr_in));
-		//local_addr.sin_family=AF_INET;
-		//if(strcmp(config->Get("network.bind.ip"),"*")==0)
-		//	local_addr.sin_addr.s_addr=htonl(INADDR_ANY);
-		//else
-		//	local_addr.sin_addr.s_addr=inet_addr(config->Get("network.bind.ip"));
-		//local_addr.sin_port = htons(atoi(config->Get("network.bind.port")));
-		//re=bind(listen_socket,(struct sockaddr *)&local_addr,sizeof(struct sockaddr_in));
-		//if(re==-1)
-		//	throw Exception("core","Unable to bind listen socket");
-                assert (nn_bind (sock, url) >= 0);
+                comm.bind();
 		
 		// Listen on socket
 		//re=listen(listen_socket,config->GetInt("network.listen.backlog"));
@@ -328,10 +315,9 @@ int main(int argc,const char **argv)
 			//remote_addr_len=sizeof(struct sockaddr);
 			//s = accept(listen_socket,(struct sockaddr *)&remote_addr,&remote_addr_len);
                         void *buf = NULL;
-                        int bytes = nn_recv (sock, &buf, NN_MSG, 0);
-                        assert (bytes >= 0);
+                        int bytes = comm.receive(&buf);
                         std::cout << "Received bytes : " << bytes << std::endl;
-                        nn_freemsg (buf);
+                        comm.freemsg(buf);
                         #if 0
 			if(s<0)
 			{

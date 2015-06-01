@@ -17,31 +17,29 @@
  * Author: Anshuman Goswami <anshumang@gatech.edu>
  */
 
-#ifndef _EVQUEUE_MANAGER_H_
-#define _EVQUEUE_MANAGER_H_
+#ifndef _INTERPOSER_H_
+#define _INTERPOSER_H_
 
-#include <cassert>
-#include "EvqueueClient.h"
-#include "Messages.h"
-#include "Interposer.h"
-#include "Communicator.h"
-#include "CuptiCallbacks.h"
+#include <iostream>
+#include <string>
 
-struct EvqueueManager
+using namespace std;
+
+struct KernelIdentifier
 {
-  EvqueueClient *m_evqueue_client;
-  Interposer *mIposer;
-  Communicator *mComm;
-  EvqueueManager(void);
-  ~EvqueueManager(void);
-  void synch(void);
-  int launch(KernelIdentifier kid);
-  friend void CUPTIAPI bufferCompleted(CUcontext, uint32_t, uint8_t *, size_t, size_t);
+   unsigned long m_grid[3];
+   unsigned long m_block[3];
+   string m_name;
+   KernelIdentifier(string name, unsigned long grid[], unsigned long block[]);
 };
 
-extern "C" void EvqueueCreate();
-extern "C" void EvqueueDestroy();
-extern "C" void EvqueueLaunch(KernelIdentifier k);
-extern "C" void EvqueueSynch();
+class Interposer
+{
+   public:
+      Interposer();
+      ~Interposer();
+      int launch(KernelIdentifier kid);
+};
 
 #endif
+

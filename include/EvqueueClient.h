@@ -20,7 +20,7 @@
 #ifndef _EVQUEUE_CLIENT_H_
 #define _EVQUEUE_CLIENT_H_
 
-#include <CuptiActivityProfiler.h>
+#include <CuptiCallbacks.h>
 
 class EvqueueClient
 {

@@ -17,22 +17,16 @@
  * Author: Anshuman Goswami <anshumang@gatech.edu>
  */
 
-#include <EvqueueManager.h>
-#include <Messages.h>
-#include <nn.h>
-#include <pipeline.h>
+#include "EvqueueManager.h"
+#include "Messages.h"
 
 static uint64_t m_start_timestamp;
-static uint32_t m_kernel_ctr, m_memcpy_h2d_ctr, m_memcpy_d2h_ctr, m_overhead_ctr;
-static uint64_t m_kernel_window_start, m_kernel_window_end, m_kernel_cumul_occ, m_memcpy_h2d_window_start, m_memcpy_h2d_window_end, m_memcpy_h2d_cumul_occ, m_memcpy_d2h_window_start, m_memcpy_d2h_window_end, m_memcpy_d2h_cumul_occ, m_overhead_window_start, m_overhead_window_end, m_overhead_cumul_occ;
-static bool done=false;
-static uint64_t m_last_kernel_end, m_last_kernel_end_no_offset, m_last_api_end, m_last_memcpy_end, m_last_memset_end, m_last_overhead_end;
+static uint64_t m_last_kernel_end, m_last_kernel_end_no_offset, m_last_api_end, m_last_memset_end, m_last_memcpy_end, m_last_overhead_end;
 static uint64_t m_last_kernel_grid[3], m_last_kernel_block[3];
 
-int m_sock;
-const char *m_url;
-
 int numCompletions;
+
+EvqueueManager *gEvqm = NULL;
 
 void CUPTIAPI bufferRequested(uint8_t **buffer, size_t *size, size_t *maxNumRecords)
 {
@@ -50,13 +44,6 @@ void CUPTIAPI bufferRequested(uint8_t **buffer, size_t *size, size_t *maxNumReco
 
 void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer, size_t size, size_t validSize)
 {
-  //if(!done)
-  //{
-    //CUPTI_CALL(cuptiGetTimestamp(&m_start_timestamp));
-    //std::cerr << "Starting at " << m_start_timestamp << std::endl;
-    //done = true;
-  //}
-  //std::cerr << "bufferCompleted with " << validSize << " bytes of records (stream " << streamId << ")"  << std::endl;
   CUptiResult status;
   CUpti_Activity *record = NULL;
 
@@ -75,13 +62,6 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
         {
           numKernelRecords++;
           CUpti_ActivityKernel2 *kernel_record = (CUpti_ActivityKernel2 *) record;
-          //m_kernel_ctr++;
-          //if(kernel_record->start - m_start_timestamp < m_kernel_window_start){
-            //m_kernel_window_start = kernel_record->start - m_start_timestamp; //gets updated once
-          //} 
-          //if(kernel_record->end - m_start_timestamp > m_kernel_window_end){
-            //m_kernel_window_end = kernel_record->end - m_start_timestamp; //gets updated with each new record
-          //}
           if(m_last_kernel_end > 0)
           {
              /*Gap > 10ms*/
@@ -119,21 +99,6 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
             LongKernel use;
             msg->m_long_kernels.push_back(use);
           }
-#if 0
-          /*valid only for single stream*/
-          unsigned long long running = kernel_record->end - kernel_record->start;
-          m_kernel_cumul_occ+=running; 
-          unsigned long long idle=0;
-          if(last_end>0)
-          {
-             idle = kernel_record->start - last_end;
-             last_end = kernel_record->end;
-          }
-          else
-          {
-             last_end = kernel_record->end;
-          }
-#endif
         }
         else if(record->kind == CUPTI_ACTIVITY_KIND_MEMSET)
         {
@@ -177,33 +142,9 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
           {
              m_last_memcpy_end = memcpy_record->end - m_start_timestamp;
           }
-          if(memcpy_record->copyKind==CUPTI_ACTIVITY_MEMCPY_KIND_HTOD)
+          if((memcpy_record->copyKind==CUPTI_ACTIVITY_MEMCPY_KIND_DTOH)||(memcpy_record->copyKind==CUPTI_ACTIVITY_MEMCPY_KIND_HTOD))
           {
-              //std::cerr << "MCH" << memcpy_record->runtimeCorrelationId << " " << memcpy_record->start - m_start_timestamp << " " << memcpy_record->end - memcpy_record->start << std::endl;
-             //m_memcpy_h2d_ctr++;
-	     //if(memcpy_record->start - m_start_timestamp < m_memcpy_h2d_window_start){
-		     //m_memcpy_h2d_window_start = memcpy_record->start - m_start_timestamp; //gets updated once
-	     //} 
-	     //if(memcpy_record->end - m_start_timestamp > m_memcpy_h2d_window_end){
-		     //m_memcpy_h2d_window_end = memcpy_record->end - m_start_timestamp; //gets updated with each new record
-	     //}
-             /*valid only for single stream*/
-             //unsigned long long running = memcpy_record->end - memcpy_record->start;
-             //m_memcpy_h2d_cumul_occ+=running; 
-	  }
-          else if(memcpy_record->copyKind==CUPTI_ACTIVITY_MEMCPY_KIND_DTOH)
-          {
-              //std::cerr << "MCD" << memcpy_record->runtimeCorrelationId << " " << memcpy_record->start - m_start_timestamp << " " << memcpy_record->end - memcpy_record->start << std::endl;
-             //m_memcpy_d2h_ctr++;
-	     //if(memcpy_record->start - m_start_timestamp < m_memcpy_d2h_window_start){
-		     //m_memcpy_d2h_window_start = memcpy_record->start - m_start_timestamp; //gets updated once
-	     //} 
-	     //if(memcpy_record->end - m_start_timestamp > m_memcpy_d2h_window_end){
-		     //m_memcpy_d2h_window_end = memcpy_record->end - m_start_timestamp; //gets updated with each new record
-	     //}
-             /*valid only for single stream*/
-             //unsigned long long running = memcpy_record->end - memcpy_record->start;
-             //m_memcpy_d2h_cumul_occ+=running; 
+
           }
           else
           {
@@ -240,17 +181,6 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
           {
              m_last_overhead_end = overhead_record->end - m_start_timestamp;
           }
-         //std::cerr << "OVERHEAD " << overhead_record->start - m_start_timestamp << " " << overhead_record->end - overhead_record->start << std::endl;
-          //if(overhead_record->start - m_start_timestamp < m_overhead_window_start){
-            //m_overhead_window_start = overhead_record->start - m_start_timestamp; //gets updated once
-          //} 
-          //if(overhead_record->end - m_start_timestamp > m_overhead_window_end){
-            //m_overhead_window_end = overhead_record->end - m_start_timestamp; //gets updated with each new record
-          //}
-	  //m_overhead_ctr++;
-	  /*valid only for single stream*/
-	  //unsigned long long running = overhead_record->end - overhead_record->start;
-	  //m_overhead_cumul_occ+=running;
         }
         else
         {
@@ -277,35 +207,7 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
     }
     save_schedule(*msg);
     std::cout << "Sent bytes : " << msg->m_stream.tellp() << "/" << sizeof(CUpti_ActivityKernel2)*numKernelRecords << std::endl;
-    //int bytes = nn_send (m_sock, msg, sizeof(ClientMessage), 0);
-    //assert (bytes == sizeof(ClientMessage));
-
-    //std::cerr << m_kernel_window_start - m_start_timestamp << " " << m_memcpy_d2h_window_start - m_start_timestamp << " " << m_overhead_window_start - m_start_timestamp <<
-    //std::endl <<
-    //std::cerr << m_kernel_window_end - m_start_timestamp << " " << m_memcpy_d2h_window_end - m_start_timestamp << " " << m_overhead_window_end - m_start_timestamp <<
-    //std::endl <<
-
-    //std::cerr << 
-    //" # of kernels : " << m_kernel_ctr <<
-    //" Time window(in ns) : " << m_kernel_window_end - m_kernel_window_start <<
-    //" Used for(in ns) : " << m_kernel_cumul_occ <<
-    //std::endl <<
-    //" # of memcpys (H2D) : " << m_memcpy_h2d_ctr <<
-    //" Used for(in ns) : " << m_memcpy_h2d_cumul_occ <<
-    //std::endl <<
-    //" # of memcpys (D2H) : " << m_memcpy_d2h_ctr <<
-    //" Used for(in ns) : " << m_memcpy_d2h_cumul_occ <<
-    //std::endl <<
-    //" # of overheads : " << m_overhead_ctr <<
-    //" Used for(in ns) : " << m_overhead_cumul_occ <<
-    //std::endl;
-
-    //reset counters
-    /*m_kernel_ctr=m_memcpy_h2d_ctr=m_memcpy_d2h_ctr=m_overhead_ctr=0;
-    m_kernel_cumul_occ=m_memcpy_h2d_cumul_occ=m_memcpy_d2h_cumul_occ=m_overhead_cumul_occ=0;
-    m_kernel_window_start=m_memcpy_h2d_window_start=m_memcpy_d2h_window_start=m_overhead_window_start=ULLONG_MAX;
-    m_kernel_window_end=m_memcpy_h2d_window_end=m_memcpy_d2h_window_end=m_overhead_window_end=0;
-    */
+    gEvqm->mComm->send(reinterpret_cast<void **>(&msg), sizeof(ClientMessage));
   }
 
   free(buffer);
@@ -314,12 +216,10 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
 EvqueueManager::EvqueueManager(void)
 {
   std::cout << "EvqueueManager CTOR" << std::endl;
-  m_interposer = new Interposer();
+  mIposer = new Interposer();
   //Sending CUPTI profiling info
-  m_url = "ipc:///tmp/pipeline.ipc";
-  m_sock = nn_socket (AF_SP, NN_PUSH);
-  assert (m_sock >= 0);
-  assert (nn_connect (m_sock, m_url) >= 0);
+  std::string url("ipc:///tmp/pipeline.ipc");
+  mComm = new Communicator(url);
 
   size_t attrValue = 0, attrValueSize = sizeof(size_t);
   attrValue = 32 * 1024 * 1024;
@@ -342,18 +242,13 @@ EvqueueManager::EvqueueManager(void)
 
   CUPTI_CALL(cuptiActivityRegisterCallbacks(bufferRequested, bufferCompleted));
   CUPTI_CALL(cuptiGetTimestamp(&m_start_timestamp));
-  /*m_kernel_ctr=m_memcpy_h2d_ctr=m_memcpy_d2h_ctr=m_overhead_ctr=0;
-  m_kernel_cumul_occ=m_memcpy_h2d_cumul_occ=m_memcpy_d2h_cumul_occ=m_overhead_cumul_occ=0;
-  m_kernel_window_start=m_memcpy_h2d_window_start=m_memcpy_d2h_window_start=m_overhead_window_start=ULLONG_MAX;
-  m_kernel_window_end=m_memcpy_h2d_window_end=m_memcpy_d2h_window_end=m_overhead_window_end=0;
-  */
 
-     //m_evqueue_client = new EvqueueClient();
 }
 
 EvqueueManager::~EvqueueManager(void)
 {
-  nn_shutdown (m_sock, 0);
+  delete mComm;
+  delete mIposer;
   /*CUPTI_CALL(cuptiActivityDisable(CUPTI_ACTIVITY_KIND_RUNTIME));
   CUPTI_CALL(cuptiActivityDisable(CUPTI_ACTIVITY_KIND_DRIVER));
   CUPTI_CALL(cuptiActivityDisable(CUPTI_ACTIVITY_KIND_MEMCPY));
@@ -368,17 +263,38 @@ EvqueueManager::~EvqueueManager(void)
 
 
   CUPTI_CALL(cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE));
-     //delete m_evqueue_client;
 }
 
 void EvqueueManager::synch(void)
 {
-  std::cerr << "Synch" <<std::endl;
   CUPTI_CALL(cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE));
-    //m_evqueue_client->synch();
 }
 
 int EvqueueManager::launch(KernelIdentifier kid)
 {
-  return m_interposer->launch(kid);
+  return mIposer->launch(kid);
+}
+
+extern "C"
+void EvqueueCreate()
+{
+    gEvqm = new EvqueueManager();
+}
+
+extern "C"
+void EvqueueDestroy()
+{
+    delete gEvqm;
+}
+
+extern "C"
+void EvqueueLaunch(KernelIdentifier kid)
+{
+    gEvqm->launch(kid);
+}
+
+extern "C"
+void EvqueueSynch()
+{
+    gEvqm->synch();
 }
