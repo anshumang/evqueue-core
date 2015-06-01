@@ -290,6 +290,8 @@ int main(int argc,const char **argv)
                 std::string url("ipc:///tmp/pipeline.ipc");
                 Component who=DAEMON;
                 Communicator comm(url, who);
+                int mSock;
+		//assert((mSock = nn_socket(AF_SP, NN_PULL)) >= 0);
 		// Create listen socket
 		//listen_socket=socket(PF_INET,SOCK_STREAM,0);
 		
@@ -298,6 +300,7 @@ int main(int argc,const char **argv)
 		//setsockopt(listen_socket,SOL_SOCKET,SO_REUSEADDR,&optval,sizeof(int));
 		
                 comm.bind();
+		//assert(nn_bind (mSock, url.c_str()) >= 0);
 		
 		// Listen on socket
 		//re=listen(listen_socket,config->GetInt("network.listen.backlog"));
@@ -317,6 +320,8 @@ int main(int argc,const char **argv)
 			//s = accept(listen_socket,(struct sockaddr *)&remote_addr,&remote_addr_len);
                         void *buf = NULL;
                         int bytes = comm.receive(&buf);
+			//int bytes = nn_recv(mSock, &buf, NN_MSG, 0);
+			assert(bytes >= 0);
                         std::cout << "Received bytes : " << bytes << std::endl;
                         comm.freemsg(buf);
                         #if 0

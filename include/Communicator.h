@@ -42,7 +42,7 @@ struct Communicator
     ~Communicator();
     int connect();
     int bind();
-    int send(void *, size_t);
+    int send(const void *, size_t);
     int receive(void *);
     int freemsg(void *);
 };

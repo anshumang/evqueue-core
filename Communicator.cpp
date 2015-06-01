@@ -69,7 +69,7 @@ int Communicator::freemsg(void *buf)
    return ret;
 }
 
-int Communicator::send(void *buf, size_t size)
+int Communicator::send(const void *buf, size_t size)
 {
    int bytes = nn_send(mSock, buf, size, 0);
    assert(bytes >= 0);

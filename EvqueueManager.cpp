@@ -27,6 +27,7 @@ static uint64_t m_last_kernel_grid[3], m_last_kernel_block[3];
 int numCompletions;
 
 EvqueueManager *gEvqm = NULL;
+int mSock;
 
 void CUPTIAPI bufferRequested(uint8_t **buffer, size_t *size, size_t *maxNumRecords)
 {
@@ -206,8 +207,12 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
       printf("Dropped %u activity records\n", (unsigned int) dropped);
     }
     save_schedule(*msg);
-    std::cout << "Sent bytes : " << msg->m_stream.tellp() << "/" << sizeof(CUpti_ActivityKernel2)*numKernelRecords << std::endl;
-    gEvqm->mComm->send(reinterpret_cast<void *>(msg), sizeof(ClientMessage));
+    std::cout << "Sent bytes : " << msg->m_stream.tellp() << "/"
+  << sizeof(ClientMessage) << "/" << sizeof(CUpti_ActivityKernel2)*numKernelRecords << std::endl;
+   string ossbuf(msg->m_stream.str());
+   gEvqm->mComm->send(reinterpret_cast<const void *>(ossbuf.c_str()), msg->m_stream.tellp());
+   //int bytes = nn_send(mSock, (void *)(ossbuf.c_str()), msg->m_stream.tellp(), 0);
+   //assert(bytes >= 0);
   }
 
   free(buffer);
@@ -221,7 +226,9 @@ EvqueueManager::EvqueueManager(void)
   std::string url("ipc:///tmp/pipeline.ipc");
   Component who=CLIENT;
   mComm = new Communicator(url, who);
+  //assert((mSock = nn_socket(AF_SP, NN_PUSH)) >= 0);
   mComm->connect();
+  //assert(nn_connect (mSock, url.c_str()) >= 0);
 
   size_t attrValue = 0, attrValueSize = sizeof(size_t);
   attrValue = 32 * 1024 * 1024;
