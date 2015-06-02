@@ -20,16 +20,10 @@
 #include <boost/thread.hpp>
 #include <boost/date_time.hpp>
 
-struct Worker
+struct Arbiter
 {
-   void operator()()
-   {
-    boost::posix_time::milliseconds epoch(10);
-    while(true) //runs forever
-    {
-       boost::this_thread::sleep(epoch);
-       boost::this_thread::interruption_point(); //otherwise this thread can't be terminated
-    } 
-   }
+   void start();
+   void join();
+   void ProcessQueue();
+   boost::thread mThread;
 };
-
