@@ -19,13 +19,6 @@
 
 #include <Interposer.h>
 
-KernelIdentifier::KernelIdentifier(string name, unsigned long grid[], unsigned long block[])
-{
-  m_name = name;
-  m_grid[0]=grid[0];m_grid[1]=grid[1];m_grid[2]=grid[2];
-  m_block[0]=block[0];m_block[1]=block[1];m_block[2]=block[2];
-}
-
 /*cudaError_t*/int Interposer::launch(KernelIdentifier kid) 
 {
    //cudaError_t (*cudaLaunchHandle)(const void *);

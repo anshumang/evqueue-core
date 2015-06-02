@@ -21,7 +21,7 @@
 #define _INTERPOSER_H_
 
 #include <iostream>
-#include <RequestDescriptor.h>
+#include <ReqRespDescriptor.h>
 
 class Interposer
 {

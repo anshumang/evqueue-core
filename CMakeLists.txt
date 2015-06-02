@@ -25,7 +25,7 @@ set_property(TARGET boost_system PROPERTY IMPORTED_LOCATION "/usr/lib/x86_64-lin
 
 project(evqueue)
 
-add_executable(evqueue evqueue.cpp Configuration.cpp ConfigurationReader.cpp DB.cpp Exception.cpp Queue.cpp QueuePool.cpp WorkflowInstance.cpp WorkflowInstances.cpp Scheduler.cpp Retrier.cpp SocketQuerySAX2Handler.cpp ProcessManager.cpp WorkflowParameters.cpp handle_connection.cpp Statistics.cpp NetworkInputSource.cpp BinNetworkInputStream.cpp Schedule.cpp WorkflowSchedule.cpp WorkflowScheduler.cpp Tasks.cpp Task.cpp Workflow.cpp Workflows.cpp Logger.cpp GarbageCollector.cpp RetrySchedule.cpp RetrySchedules.cpp SequenceGenerator.cpp tools.cpp Messages.cpp Communicator.cpp Arbiter.cpp)
+add_executable(evqueue evqueue.cpp Configuration.cpp ConfigurationReader.cpp DB.cpp Exception.cpp Queue.cpp QueuePool.cpp WorkflowInstance.cpp WorkflowInstances.cpp Scheduler.cpp Retrier.cpp SocketQuerySAX2Handler.cpp ProcessManager.cpp WorkflowParameters.cpp handle_connection.cpp Statistics.cpp NetworkInputSource.cpp BinNetworkInputStream.cpp Schedule.cpp WorkflowSchedule.cpp WorkflowScheduler.cpp Tasks.cpp Task.cpp Workflow.cpp Workflows.cpp Logger.cpp GarbageCollector.cpp RetrySchedule.cpp RetrySchedules.cpp SequenceGenerator.cpp tools.cpp Messages.cpp Communicator.cpp Arbiter.cpp ReqRespDescriptor.cpp)
 
 include_directories(include /usr/include /usr/local/cuda/include /usr/local/cuda/extras/CUPTI/include /opt/data1/share/users/anshuman/nanomsg/src)
 

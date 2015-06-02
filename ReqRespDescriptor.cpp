@@ -17,25 +17,12 @@
  * Author: Anshuman Goswami <anshumang@gatech.edu>
  */
 
-#ifndef _REQUEST_DESCRIPTOR_H
-#define _REQUEST_DESCRIPTOR_H
+#include <ReqRespDescriptor.h>
 
-#include <string>
-
-using namespace std;
-
-struct KernelIdentifier
+KernelIdentifier::KernelIdentifier(string name, unsigned long grid[], unsigned long block[])
 {
-   unsigned long m_grid[3];
-   unsigned long m_block[3];
-   string m_name;
-   KernelIdentifier(string name, unsigned long grid[], unsigned long block[]);
-};
+  m_name = name;
+  m_grid[0]=grid[0];m_grid[1]=grid[1];m_grid[2]=grid[2];
+  m_block[0]=block[0];m_block[1]=block[1];m_block[2]=block[2];
+}
 
-struct RequestDescriptor
-{
-     struct KernelIdentifier kid;
-     long total_milliseconds;
-};
-
-#endif

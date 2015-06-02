@@ -18,10 +18,20 @@
  */
 
 #include "Arbiter.h"
-#include "RequestDescriptor.h"
+
+Arbiter::Arbiter()
+{
+   mReqWindow = new RequestWindow();
+}
+
+Arbiter::~Arbiter()
+{
+   delete mReqWindow;
+}
 
 void Arbiter::start()
 {
+   std::cout << "In ProcessQueue thread" << std::endl;
    mThread = boost::thread(&Arbiter::ProcessQueue, this);
 }
 
@@ -37,6 +47,12 @@ void Arbiter::ProcessQueue()
   {
 	  boost::this_thread::sleep(epoch);
 	  //queue get processed here
+          //C++11 support needed
+          //for (auto const& p : mReqWindow->getProcesses())
+          //{
+             //mReqWindow->getRequests(p);
+          //}
+          std::cout << "Epoch elapsed" << std::endl;
 	  boost::this_thread::interruption_point(); //otherwise this thread can't be terminated
   } 
 }

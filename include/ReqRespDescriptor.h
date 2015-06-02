@@ -17,15 +17,31 @@
  * Author: Anshuman Goswami <anshumang@gatech.edu>
  */
 
-#include <map>
+#ifndef _REQRESP_DESCRIPTOR_H
+#define _REQRESP_DESCRIPTOR_H
+
 #include <string>
-#include <vector>
-#include "ReqRespDescriptor.h"
 
-struct RequestWindow
+using namespace std;
+
+struct KernelIdentifier
 {
-  std::vector<std::string> getProcesses();
-  std::vector<RequestDescriptor> getRequests();
-  std::map <std::string, std::vector <RequestDescriptor> > mProcessReqMap;
-
+   unsigned long m_grid[3];
+   unsigned long m_block[3];
+   string m_name;
+   KernelIdentifier(string name, unsigned long grid[], unsigned long block[]);
 };
+
+struct RequestDescriptor
+{
+   struct KernelIdentifier kid;
+   long request_timestamp;
+};
+
+struct ResponseDescriptor
+{
+   bool mNeedYield;
+   long mRunSlice; //how long before yielding
+};
+
+#endif

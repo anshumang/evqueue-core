@@ -19,12 +19,15 @@
 
 #include <boost/thread.hpp>
 #include <boost/date_time.hpp>
-#include "RequestDescriptor.h"
+#include "RequestWindow.h"
 
 struct Arbiter
 {
+   Arbiter();
+   ~Arbiter();
    void start();
    void join();
    void ProcessQueue();
    boost::thread mThread;
+   RequestWindow *mReqWindow;   
 };

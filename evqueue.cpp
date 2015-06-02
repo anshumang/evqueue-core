@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with evQueue. If not, see <http://www.gnu.org/licenses/>.
  * 
- * Author: Thibault Kummer <bob@coldsource.net>
+ * Author: Thibault Kummer <bob@coldsource.net>, Anshuman Goswami <anshumang@gatech.edu>
  */
 
 #include <stdio.h>
@@ -287,6 +287,9 @@ int main(int argc,const char **argv)
 		//int re,s,optval;
 		//struct sockaddr_in local_addr,remote_addr;
 		//socklen_t remote_addr_len;
+
+                Arbiter arb;
+                arb.start();
 		
                 std::string url("ipc:///tmp/pipeline.ipc");
                 Component who=DAEMON;
