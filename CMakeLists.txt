@@ -17,6 +17,12 @@ set_property(TARGET mysqlclient PROPERTY IMPORTED_LOCATION "/usr/lib/x86_64-linu
 add_library(xercs-c SHARED IMPORTED)
 set_property(TARGET xercs-c PROPERTY IMPORTED_LOCATION "/usr/lib/x86_64-linux-gnu/libxercs-c.so")
 
+add_library(boost_thread SHARED IMPORTED)
+set_property(TARGET boost_thread PROPERTY IMPORTED_LOCATION "/usr/lib/x86_64-linux-gnu/libboost_thread.so")
+
+add_library(boost_system SHARED IMPORTED)
+set_property(TARGET boost_system PROPERTY IMPORTED_LOCATION "/usr/lib/x86_64-linux-gnu/libboost_system.so")
+
 project(evqueue)
 
 add_executable(evqueue evqueue.cpp Configuration.cpp ConfigurationReader.cpp DB.cpp Exception.cpp Queue.cpp QueuePool.cpp WorkflowInstance.cpp WorkflowInstances.cpp Scheduler.cpp Retrier.cpp SocketQuerySAX2Handler.cpp ProcessManager.cpp WorkflowParameters.cpp handle_connection.cpp Statistics.cpp NetworkInputSource.cpp BinNetworkInputStream.cpp Schedule.cpp WorkflowSchedule.cpp WorkflowScheduler.cpp Tasks.cpp Task.cpp Workflow.cpp Workflows.cpp Logger.cpp GarbageCollector.cpp RetrySchedule.cpp RetrySchedules.cpp SequenceGenerator.cpp tools.cpp Messages.cpp Communicator.cpp)
@@ -31,6 +37,8 @@ target_link_libraries(evqueue rt)
 target_link_libraries(evqueue cupti)
 target_link_libraries(evqueue nanomsg)
 #target_link_libraries(evqueue anl)
+target_link_libraries(evqueue boost_thread)
+target_link_libraries(evqueue boost_system)
 
 project(evqueue_monitor)
 

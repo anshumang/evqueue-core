@@ -60,6 +60,7 @@
 #include <xqilla/xqilla-dom3.hpp>
 
 #include "Communicator.h"
+#include "ThreadPool.h"
 
 //int listen_socket;//Moved definition to WorkflowInstance.cpp because this file is not built when generating the lib
 
