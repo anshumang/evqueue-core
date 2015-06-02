@@ -17,14 +17,13 @@
  * Author: Anshuman Goswami <anshumang@gatech.edu>
  */
 
-#include <boost/thread.hpp>
-#include <boost/date_time.hpp>
+#include <map>
+#include <string>
+#include <vector>
 #include "RequestDescriptor.h"
 
-struct Arbiter
+struct RequestWindow
 {
-   void start();
-   void join();
-   void ProcessQueue();
-   boost::thread mThread;
+  std::map <std::string, std::vector <RequestDescriptor> > RequestMap;
+
 };

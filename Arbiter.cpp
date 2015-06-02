@@ -18,6 +18,7 @@
  */
 
 #include "Arbiter.h"
+#include "RequestDescriptor.h"
 
 void Arbiter::start()
 {

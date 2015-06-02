@@ -17,14 +17,25 @@
  * Author: Anshuman Goswami <anshumang@gatech.edu>
  */
 
-#include <boost/thread.hpp>
-#include <boost/date_time.hpp>
-#include "RequestDescriptor.h"
+#ifndef _REQUEST_DESCRIPTOR_H
+#define _REQUEST_DESCRIPTOR_H
 
-struct Arbiter
+#include <string>
+
+using namespace std;
+
+struct KernelIdentifier
 {
-   void start();
-   void join();
-   void ProcessQueue();
-   boost::thread mThread;
+   unsigned long m_grid[3];
+   unsigned long m_block[3];
+   string m_name;
+   KernelIdentifier(string name, unsigned long grid[], unsigned long block[]);
 };
+
+struct RequestDescriptor
+{
+     struct KernelIdentifier kid;
+     long total_milliseconds;
+};
+
+#endif

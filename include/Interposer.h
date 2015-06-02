@@ -21,17 +21,7 @@
 #define _INTERPOSER_H_
 
 #include <iostream>
-#include <string>
-
-using namespace std;
-
-struct KernelIdentifier
-{
-   unsigned long m_grid[3];
-   unsigned long m_block[3];
-   string m_name;
-   KernelIdentifier(string name, unsigned long grid[], unsigned long block[]);
-};
+#include <RequestDescriptor.h>
 
 class Interposer
 {
