@@ -22,17 +22,17 @@
 Communicator::Communicator(std::string& url, Component who)
         :mURL(url)
 {
-    if(who == CLIENT)
+    if(who == SENDER)
     {
        assert((mSock = nn_socket(AF_SP, NN_PUSH)) >= 0);
     }
-    else if(who == DAEMON)
+    else if(who == RECEIVER)
     {
        assert((mSock = nn_socket(AF_SP, NN_PULL)) >= 0);
     }
     else
     {
-       assert(0 && "Component has to be CLIENT or DAEMON");
+       assert(0 && "Component has to be SENDER or RECEIVER");
     }
 }
 

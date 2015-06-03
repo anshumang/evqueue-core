@@ -21,6 +21,8 @@
 #define _INTERPOSER_H_
 
 #include <iostream>
+#include <cstring>
+#include <sys/time.h>
 #include <ReqRespDescriptor.h>
 
 class Interposer

@@ -18,6 +18,9 @@
  */
 
 #include <Interposer.h>
+#include <Communicator.h>
+#include <chrono>
+#include <EvqueueManager.h>
 
 /*cudaError_t*/int Interposer::launch(KernelIdentifier kid) 
 {
@@ -26,8 +29,27 @@
    //return cudaLaunchHandle(entry);
    std::cout << "Launch : " << kid.m_name 
    << kid.m_grid[0] << " " << kid.m_grid[1] << " " << kid.m_grid[2] << " "
-   << kid.m_block[0] << " " << kid.m_block[1] << " " << kid.m_block[2]
+   << kid.m_block[0] << " " << kid.m_block[1] << " " << kid.m_block[2] << " "
+   //<< std::chrono::high_resolution_clock::now()
    << std::endl;
+   RequestDescriptor reqDesc;
+   reqDesc.grid[0]=kid.m_grid[0];
+   reqDesc.grid[1]=kid.m_grid[1];
+   reqDesc.grid[2]=kid.m_grid[2];
+   reqDesc.block[0]=kid.m_block[0];
+   reqDesc.block[1]=kid.m_block[1];
+   reqDesc.block[2]=kid.m_block[2];
+   //reqDesc.timestamp = std::chrono::high_resolution_clock::now();
+   struct timeval now;
+   gettimeofday(&now, NULL);
+   reqDesc.timestamp = now.tv_sec * 1000000 + now.tv_usec;
+   void *sendbuf = new char[sizeof(RequestDescriptor)+kid.m_name.length()+1];
+   std::memcpy(sendbuf, reinterpret_cast<void*>(&reqDesc), sizeof(RequestDescriptor));
+   std::memcpy(sendbuf+sizeof(RequestDescriptor), kid.m_name.c_str(), kid.m_name.length());
+   char nullch = '\0';
+   std::memcpy(sendbuf+sizeof(RequestDescriptor)+kid.m_name.length(), &nullch, sizeof(char));
+   std::cout << "Sending bytes : " << sizeof(RequestDescriptor)+kid.m_name.length()+1 << std::endl;
+   gEvqm->mReq->send(sendbuf, sizeof(RequestDescriptor)+kid.m_name.length()+1);
    return 0;
 }
 

@@ -34,8 +34,10 @@ struct KernelIdentifier
 
 struct RequestDescriptor
 {
-   struct KernelIdentifier kid;
-   long request_timestamp;
+   //struct KernelIdentifier kid;
+   unsigned long grid[3];
+   unsigned long block[3];
+   unsigned long timestamp;
 };
 
 struct ResponseDescriptor

@@ -30,8 +30,8 @@ using namespace std;
 
 enum Component
 {
-    CLIENT,
-    DAEMON
+    SENDER,
+    RECEIVER
 };
 
 struct Communicator

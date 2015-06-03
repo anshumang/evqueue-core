@@ -31,13 +31,15 @@ struct EvqueueManager
 {
   EvqueueClient *m_evqueue_client;
   Interposer *mIposer;
-  Communicator *mComm;
+  Communicator *mComm, *mReq, *mResp;
   EvqueueManager(void);
   ~EvqueueManager(void);
   void synch(void);
   int launch(KernelIdentifier kid);
   friend void CUPTIAPI bufferCompleted(CUcontext, uint32_t, uint8_t *, size_t, size_t);
 };
+
+extern EvqueueManager *gEvqm;
 
 extern "C" void EvqueueCreate();
 extern "C" void EvqueueDestroy();

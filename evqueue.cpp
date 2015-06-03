@@ -289,12 +289,11 @@ int main(int argc,const char **argv)
 		//socklen_t remote_addr_len;
 
                 Arbiter arb;
-                arb.start();
+                //arb.start();
 		
-                std::string url("ipc:///tmp/pipeline.ipc");
-                Component who=DAEMON;
-                Communicator comm(url, who);
-                int mSock;
+                std::string url("ipc:///tmp/req.ipc");
+                Communicator comm(url, RECEIVER);
+                //int mSock;
 		//assert((mSock = nn_socket(AF_SP, NN_PULL)) >= 0);
 		// Create listen socket
 		//listen_socket=socket(PF_INET,SOCK_STREAM,0);
@@ -327,6 +326,17 @@ int main(int argc,const char **argv)
 			//int bytes = nn_recv(mSock, &buf, NN_MSG, 0);
 			assert(bytes >= 0);
                         std::cout << "Received bytes : " << bytes << std::endl;
+                        RequestDescriptor *reqDesc = (RequestDescriptor*)buf;
+                        std::cout
+                        << reqDesc->timestamp << " "
+                        << reqDesc->grid[0] << " "
+                        << reqDesc->grid[1] << " "
+                        << reqDesc->grid[2] << " "
+                        << reqDesc->block[0] << " "
+                        << reqDesc->block[1] << " "
+                        << reqDesc->block[2] << " "
+                        << std::endl;
+
                         comm.freemsg(buf);
                         #if 0
 			if(s<0)

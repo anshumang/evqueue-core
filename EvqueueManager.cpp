@@ -209,8 +209,9 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
     save_schedule(*msg);
     std::cout << "Sent bytes : " << msg->m_stream.tellp() << "/"
   << sizeof(ClientMessage) << "/" << sizeof(CUpti_ActivityKernel2)*numKernelRecords << std::endl;
-   string ossbuf(msg->m_stream.str());
+   /*string ossbuf(msg->m_stream.str());
    gEvqm->mComm->send(reinterpret_cast<const void *>(ossbuf.c_str()), msg->m_stream.tellp());
+   */
    //int bytes = nn_send(mSock, (void *)(ossbuf.c_str()), msg->m_stream.tellp(), 0);
    //assert(bytes >= 0);
   }
@@ -223,12 +224,14 @@ EvqueueManager::EvqueueManager(void)
   std::cout << "EvqueueManager CTOR" << std::endl;
   mIposer = new Interposer();
   //Sending CUPTI profiling info
-  std::string url("ipc:///tmp/pipeline.ipc");
-  Component who=CLIENT;
-  mComm = new Communicator(url, who);
+  /*std::string url("ipc:///tmp/pipeline.ipc");
+  mComm = new Communicator(url, SENDER);
+  mComm->connect();*/
   //assert((mSock = nn_socket(AF_SP, NN_PUSH)) >= 0);
-  mComm->connect();
   //assert(nn_connect (mSock, url.c_str()) >= 0);
+  std::string url("ipc:///tmp/req.ipc");
+  mReq = new Communicator(url, SENDER);
+  mReq->connect();
 
   size_t attrValue = 0, attrValueSize = sizeof(size_t);
   attrValue = 32 * 1024 * 1024;
