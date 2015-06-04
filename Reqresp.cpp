@@ -21,6 +21,7 @@
 
 Reqresp::Reqresp(std::string url)
 {
+   std::cout << "Creating listener at " << url << std::endl;
    mComm = new Communicator(url, RECEIVER);
    mComm->bind();
 }
@@ -42,11 +43,28 @@ void Reqresp::join()
 
 void Reqresp::ProcessReq()
 {
+   std::cout << "Daemon starts listening at " << mComm->mSock  << " with URL of " << mComm->mURL << std::endl;
    while(true)
    {
       void *buf = NULL;
       int bytes = mComm->receive(&buf);
       assert(bytes >= 0);
+      RequestDescriptor *reqDesc = (RequestDescriptor*)buf;
+      struct timeval now;
+      gettimeofday(&now, NULL);
+      std::cout
+	      << "Tenant 2 (pagerank) : "
+	      << now.tv_sec * 1000000 + now.tv_usec << " "
+	      << now.tv_sec * 1000000 + now.tv_usec - reqDesc->timestamp << " "
+	      << reqDesc->grid[0] << " "
+	      << reqDesc->grid[1] << " "
+	      << reqDesc->grid[2] << " "
+	      << reqDesc->block[0] << " "
+	      << reqDesc->block[1] << " "
+	      << reqDesc->block[2] << " "
+	      << bytes
+	      << std::endl;
+
       mComm->freemsg(buf);
    }
 }

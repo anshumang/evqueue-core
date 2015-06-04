@@ -44,12 +44,14 @@
    std::memcpy(sendbuf+sizeof(RequestDescriptor), kid.m_name.c_str(), kid.m_name.length());
    char nullch = '\0';
    std::memcpy(sendbuf+sizeof(RequestDescriptor)+kid.m_name.length(), &nullch, sizeof(char));
+/*
    std::cout <<
    reqDesc.timestamp << " "
    << kid.m_grid[0] << " " << kid.m_grid[1] << " " << kid.m_grid[2] << " "
    << kid.m_block[0] << " " << kid.m_block[1] << " " << kid.m_block[2] << " "
    << sizeof(RequestDescriptor)+kid.m_name.length()+1
    << std::endl;
+*/
    gEvqm->mReq->send(sendbuf, sizeof(RequestDescriptor)+kid.m_name.length()+1);
    return 0;
 }

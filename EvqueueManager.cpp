@@ -229,7 +229,17 @@ EvqueueManager::EvqueueManager(int tenantId)
   mComm->connect();*/
   //assert((mSock = nn_socket(AF_SP, NN_PUSH)) >= 0);
   //assert(nn_connect (mSock, url.c_str()) >= 0);
-  std::string url("ipc:///tmp/req.ipc");
+
+  std::string url;
+  if (tenantId == 1)
+  {  
+     url = "ipc:///tmp/req1.ipc";
+  }
+  else
+  {
+     url = "ipc:///tmp/req2.ipc";
+  }
+  std::cout << "Creating sender at " << url  << " for tenant " << tenantId << std::endl; 
   mReq = new Communicator(url, SENDER);
   mReq->connect();
 

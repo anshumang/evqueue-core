@@ -61,6 +61,7 @@
 
 #include "Communicator.h"
 #include "Arbiter.h"
+#include "Reqresp.h"
 
 //int listen_socket;//Moved definition to WorkflowInstance.cpp because this file is not built when generating the lib
 
@@ -290,8 +291,12 @@ int main(int argc,const char **argv)
 
                 Arbiter arb;
                 //arb.start();
+
+                Reqresp tenant2("ipc:///tmp/req2.ipc");
+                tenant2.start();
 		
                 std::string url("ipc:///tmp/req1.ipc");
+		std::cout << "Creating listener at " << url << std::endl;
                 Communicator comm1(url, RECEIVER);
                 //int mSock;
 		//assert((mSock = nn_socket(AF_SP, NN_PULL)) >= 0);
@@ -317,6 +322,7 @@ int main(int argc,const char **argv)
 		
 		// Loop for incoming connections
 		int len,*sp;
+		std::cout << "Daemon starts listening at " << comm1.mSock  << " with URL of " << comm1.mURL << std::endl;
 		while(1)
 		{
 			//remote_addr_len=sizeof(struct sockaddr);
@@ -328,17 +334,18 @@ int main(int argc,const char **argv)
                         RequestDescriptor *reqDesc = (RequestDescriptor*)buf;
 			struct timeval now;
 			gettimeofday(&now, NULL);
-                        std::cout
-                        << now.tv_sec * 1000000 + now.tv_usec << " "
-                        << now.tv_sec * 1000000 + now.tv_usec - reqDesc->timestamp << " "
-                        << reqDesc->grid[0] << " "
-                        << reqDesc->grid[1] << " "
-                        << reqDesc->grid[2] << " "
-                        << reqDesc->block[0] << " "
-                        << reqDesc->block[1] << " "
-                        << reqDesc->block[2] << " "
-                        << bytes
-                        << std::endl;
+			std::cout
+				<< "Tenant 1 (neural net) : "
+				<< now.tv_sec * 1000000 + now.tv_usec << " "
+				<< now.tv_sec * 1000000 + now.tv_usec - reqDesc->timestamp << " "
+				<< reqDesc->grid[0] << " "
+				<< reqDesc->grid[1] << " "
+				<< reqDesc->grid[2] << " "
+				<< reqDesc->block[0] << " "
+				<< reqDesc->block[1] << " "
+				<< reqDesc->block[2] << " "
+				<< bytes
+				<< std::endl;
 
                         comm1.freemsg(buf);
                         #if 0

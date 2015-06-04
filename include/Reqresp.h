@@ -23,6 +23,7 @@
 
 #include <boost/thread.hpp>
 #include "Communicator.h"
+#include "ReqRespDescriptor.h"
 
 struct Reqresp
 {
