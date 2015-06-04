@@ -33,6 +33,7 @@ struct Arbiter
    void ProcessQueue();
    boost::thread mThread;
    RequestWindow *mReqWindow;   
+   friend struct Reqresp;
 };
 
 #endif

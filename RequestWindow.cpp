@@ -1,4 +1,3 @@
-
 /*
  * This file is part of evQueue
  * 
@@ -18,25 +17,15 @@
  * Author: Anshuman Goswami <anshumang@gatech.edu>
  */
 
-#ifndef _REQRESP_H
-#define _REQRESP_H
+#include "RequestWindow.h"
 
-#include <boost/thread.hpp>
-#include "Communicator.h"
-#include "ReqRespDescriptor.h"
-#include "Arbiter.h"
-
-struct Reqresp
+RequestWindow::RequestWindow()
+ : mPerTenantRequestQueue(2)
 {
-   Reqresp(std::string url, int tenantId, Arbiter *arb);
-   ~Reqresp();
-   void start();
-   void join();
-   void ProcessReq();
-   boost::thread mThread;
-   int mTenantId;
-   Communicator *mComm;
-   Arbiter *mArb;
+
 };
 
-#endif
+void RequestWindow::addRequest(int tenantId)
+{
+  std::cout << "Adding a request from tenant " << tenantId << std::endl;
+}

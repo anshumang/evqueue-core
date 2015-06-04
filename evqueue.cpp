@@ -292,28 +292,20 @@ int main(int argc,const char **argv)
                 Arbiter arb;
                 //arb.start();
 
-                Reqresp tenant1("ipc:///tmp/req1.ipc" ,1);
+                Reqresp tenant1("ipc:///tmp/req1.ipc" ,1, &arb);
                 tenant1.start();
 		
-                Reqresp tenant2("ipc:///tmp/req2.ipc", 2);
+                Reqresp tenant2("ipc:///tmp/req2.ipc", 2, &arb);
                 tenant2.start();
                 
                 tenant1.join();
 		
-                //std::string url("ipc:///tmp/req1.ipc");
-		//std::cout << "Creating listener at " << url << std::endl;
-                //Communicator comm1(url, RECEIVER);
-                //int mSock;
-		//assert((mSock = nn_socket(AF_SP, NN_PULL)) >= 0);
 		// Create listen socket
 		//listen_socket=socket(PF_INET,SOCK_STREAM,0);
 		
 		// Configure socket
 		//optval=1;
 		//setsockopt(listen_socket,SOL_SOCKET,SO_REUSEADDR,&optval,sizeof(int));
-		
-                //comm1.bind();
-		//assert(nn_bind (mSock, url.c_str()) >= 0);
 		
 		// Listen on socket
 		//re=listen(listen_socket,config->GetInt("network.listen.backlog"));
@@ -327,34 +319,10 @@ int main(int argc,const char **argv)
 		
 		// Loop for incoming connections
 		int len,*sp;
-		//std::cout << "Daemon starts listening at " << comm1.mSock  << " with URL of " << comm1.mURL << std::endl;
 		//while(1)
 		//{
 			//remote_addr_len=sizeof(struct sockaddr);
 			//s = accept(listen_socket,(struct sockaddr *)&remote_addr,&remote_addr_len);
-                        /*
-                        void *buf = NULL;
-                        int bytes = comm1.receive(&buf);
-			//int bytes = nn_recv(mSock, &buf, NN_MSG, 0);
-			assert(bytes >= 0);
-                        RequestDescriptor *reqDesc = (RequestDescriptor*)buf;
-			struct timeval now;
-			gettimeofday(&now, NULL);
-			std::cout
-				<< "Tenant 1 (neural net) : "
-				<< now.tv_sec * 1000000 + now.tv_usec << " "
-				<< now.tv_sec * 1000000 + now.tv_usec - reqDesc->timestamp << " "
-				<< reqDesc->grid[0] << " "
-				<< reqDesc->grid[1] << " "
-				<< reqDesc->grid[2] << " "
-				<< reqDesc->block[0] << " "
-				<< reqDesc->block[1] << " "
-				<< reqDesc->block[2] << " "
-				<< bytes
-				<< std::endl;
-
-                        comm1.freemsg(buf);
-                        */
                         #if 0
 			if(s<0)
 			{

@@ -20,12 +20,12 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <iostream>
 #include "ReqRespDescriptor.h"
 
 struct RequestWindow
 {
-  std::vector<std::string> getProcesses();
-  std::vector<RequestDescriptor> getRequests();
-  std::map <std::string, std::vector <RequestDescriptor> > mProcessReqMap;
-
+  std::vector <std::vector <RequestDescriptor> > mPerTenantRequestQueue;
+  RequestWindow();
+  void addRequest(int tenantId);
 };

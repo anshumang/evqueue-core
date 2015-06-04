@@ -19,10 +19,10 @@
 
 #include "Reqresp.h"
 
-Reqresp::Reqresp(std::string url, int tenantId)
+Reqresp::Reqresp(std::string url, int tenantId, Arbiter *arb)
+  : mTenantId(tenantId), mArb(arb)
 {
    std::cout << "Creating listener at " << url << std::endl;
-   mTenantId = tenantId;
    mComm = new Communicator(url, RECEIVER);
    mComm->bind();
 }
@@ -51,6 +51,7 @@ void Reqresp::ProcessReq()
       int bytes = mComm->receive(&buf);
       assert(bytes >= 0);
       RequestDescriptor *reqDesc = (RequestDescriptor*)buf;
+      mArb->mReqWindow->addRequest(mTenantId);  
       struct timeval now;
       gettimeofday(&now, NULL);
       std::cout
