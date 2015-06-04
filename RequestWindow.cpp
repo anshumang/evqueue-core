@@ -20,7 +20,7 @@
 #include "RequestWindow.h"
 
 RequestWindow::RequestWindow()
- : mPerTenantRequestQueue(2)
+ : mPerTenantRequestQueue(2), mPerTenantReqReady(2, false)
 {
 
 };
@@ -36,7 +36,26 @@ RequestDescriptor* RequestWindow::peekRequest(int tenantId)
    return mPerTenantRequestQueue[tenantId].front();
 }
 
-void RequestWindow::addToWaiters(int tenantId)
+void RequestWindow::addRequestor(int tenantId)
 {
     mWaitingTenantId.insert(tenantId);
+}
+
+void RequestWindow::removeRequestor(int tenantId)
+{
+   mWaitingTenantId.erase(tenantId);
+}
+
+void RequestWindow::waitForResponse(int tenantId)
+{
+    std::unique_lock<std::mutex> lk(mPerTenantLock[tenantId]);
+    mPerTenantNotify[tenantId].wait(lk, [this, tenantId]{return mPerTenantReqReady[tenantId];});
+    lk.unlock();
+}
+
+void RequestWindow::releaseRequestor(int tenantId)
+{
+    std::lock_guard<std::mutex> lk(mPerTenantLock[tenantId]);
+    mPerTenantReqReady[tenantId] = true;
+    mPerTenantNotify[tenantId].notify_one();
 }

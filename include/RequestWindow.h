@@ -23,16 +23,24 @@
 #include <queue>
 #include <iostream>
 #include <set>
+#include <mutex>
+#include <condition_variable>
 #include "ReqRespDescriptor.h"
 
 struct RequestWindow
 {
   std::vector <std::queue <RequestDescriptor *> > mPerTenantRequestQueue;
   std::set <int> mWaitingTenantId;
+  std::vector<bool> mPerTenantReqReady;
+  std::vector<std::mutex> mPerTenantLock;
+  std::vector<std::condition_variable> mPerTenantNotify;
   RequestWindow();
   //mPerTenantRequestQueue helpers
   void addRequest(int tenantId, RequestDescriptor *reqDesc);
   RequestDescriptor* peekRequest(int tenantId);
   //mWaitingTenantId helpers
-  void addToWaiters(int tenantId);
+  void addRequestor(int tenantId);
+  void removeRequestor(int tenantId);
+  void waitForResponse(int tenantId);
+  void releaseRequestor(int tenantId);
 };

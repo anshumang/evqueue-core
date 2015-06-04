@@ -50,9 +50,8 @@ void Reqresp::ProcessReq()
       void *buf = NULL;
       int bytes = mComm->receive(&buf);
       assert(bytes >= 0);
-      RequestDescriptor *reqDesc = (RequestDescriptor*)buf;
-      mArb->mReqWindow->addRequest(mTenantId, reqDesc);  
-      mArb->mReqWindow->addToWaiters(mTenantId);
+
+      /*
       struct timeval now;
       gettimeofday(&now, NULL);
       std::cout
@@ -67,7 +66,13 @@ void Reqresp::ProcessReq()
 	      << reqDesc->block[2] << " "
 	      << bytes
 	      << std::endl;
+      */
 
+      RequestDescriptor *reqDesc = (RequestDescriptor*)buf;
+      mArb->mReqWindow->addRequest(mTenantId, reqDesc);  
+      mArb->mReqWindow->addRequestor(mTenantId);
+      //the blocking in tenant is a result of delaying the receive()
+      mArb->mReqWindow->waitForResponse(mTenantId);
       mComm->freemsg(buf);
    }
 }
