@@ -20,12 +20,19 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <queue>
 #include <iostream>
+#include <set>
 #include "ReqRespDescriptor.h"
 
 struct RequestWindow
 {
-  std::vector <std::vector <RequestDescriptor> > mPerTenantRequestQueue;
+  std::vector <std::queue <RequestDescriptor *> > mPerTenantRequestQueue;
+  std::set <int> mWaitingTenantId;
   RequestWindow();
-  void addRequest(int tenantId);
+  //mPerTenantRequestQueue helpers
+  void addRequest(int tenantId, RequestDescriptor *reqDesc);
+  RequestDescriptor* peekRequest(int tenantId);
+  //mWaitingTenantId helpers
+  void addToWaiters(int tenantId);
 };

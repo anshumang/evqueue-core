@@ -51,7 +51,8 @@ void Reqresp::ProcessReq()
       int bytes = mComm->receive(&buf);
       assert(bytes >= 0);
       RequestDescriptor *reqDesc = (RequestDescriptor*)buf;
-      mArb->mReqWindow->addRequest(mTenantId);  
+      mArb->mReqWindow->addRequest(mTenantId, reqDesc);  
+      mArb->mReqWindow->addToWaiters(mTenantId);
       struct timeval now;
       gettimeofday(&now, NULL);
       std::cout

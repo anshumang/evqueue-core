@@ -25,7 +25,18 @@ RequestWindow::RequestWindow()
 
 };
 
-void RequestWindow::addRequest(int tenantId)
+void RequestWindow::addRequest(int tenantId, RequestDescriptor *reqDesc)
 {
   std::cout << "Adding a request from tenant " << tenantId << std::endl;
+  mPerTenantRequestQueue[tenantId].push(reqDesc);
+}
+
+RequestDescriptor* RequestWindow::peekRequest(int tenantId)
+{
+   return mPerTenantRequestQueue[tenantId].front();
+}
+
+void RequestWindow::addToWaiters(int tenantId)
+{
+    mWaitingTenantId.insert(tenantId);
 }
