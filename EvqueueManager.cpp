@@ -219,7 +219,7 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
   free(buffer);
 }
 
-EvqueueManager::EvqueueManager(void)
+EvqueueManager::EvqueueManager(int tenantId)
 {
   std::cout << "EvqueueManager CTOR" << std::endl;
   mIposer = new Interposer();
@@ -288,9 +288,9 @@ int EvqueueManager::launch(KernelIdentifier kid)
 }
 
 extern "C"
-void EvqueueCreate()
+void EvqueueCreate(int tenantId)
 {
-    gEvqm = new EvqueueManager();
+    gEvqm = new EvqueueManager(tenantId);
 }
 
 extern "C"

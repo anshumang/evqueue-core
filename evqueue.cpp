@@ -291,8 +291,8 @@ int main(int argc,const char **argv)
                 Arbiter arb;
                 //arb.start();
 		
-                std::string url("ipc:///tmp/req.ipc");
-                Communicator comm(url, RECEIVER);
+                std::string url("ipc:///tmp/req1.ipc");
+                Communicator comm1(url, RECEIVER);
                 //int mSock;
 		//assert((mSock = nn_socket(AF_SP, NN_PULL)) >= 0);
 		// Create listen socket
@@ -302,7 +302,7 @@ int main(int argc,const char **argv)
 		//optval=1;
 		//setsockopt(listen_socket,SOL_SOCKET,SO_REUSEADDR,&optval,sizeof(int));
 		
-                comm.bind();
+                comm1.bind();
 		//assert(nn_bind (mSock, url.c_str()) >= 0);
 		
 		// Listen on socket
@@ -322,22 +322,25 @@ int main(int argc,const char **argv)
 			//remote_addr_len=sizeof(struct sockaddr);
 			//s = accept(listen_socket,(struct sockaddr *)&remote_addr,&remote_addr_len);
                         void *buf = NULL;
-                        int bytes = comm.receive(&buf);
+                        int bytes = comm1.receive(&buf);
 			//int bytes = nn_recv(mSock, &buf, NN_MSG, 0);
 			assert(bytes >= 0);
-                        std::cout << "Received bytes : " << bytes << std::endl;
                         RequestDescriptor *reqDesc = (RequestDescriptor*)buf;
+			struct timeval now;
+			gettimeofday(&now, NULL);
                         std::cout
-                        << reqDesc->timestamp << " "
+                        << now.tv_sec * 1000000 + now.tv_usec << " "
+                        << now.tv_sec * 1000000 + now.tv_usec - reqDesc->timestamp << " "
                         << reqDesc->grid[0] << " "
                         << reqDesc->grid[1] << " "
                         << reqDesc->grid[2] << " "
                         << reqDesc->block[0] << " "
                         << reqDesc->block[1] << " "
                         << reqDesc->block[2] << " "
+                        << bytes
                         << std::endl;
 
-                        comm.freemsg(buf);
+                        comm1.freemsg(buf);
                         #if 0
 			if(s<0)
 			{

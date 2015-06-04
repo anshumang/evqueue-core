@@ -17,22 +17,36 @@
  * Author: Anshuman Goswami <anshumang@gatech.edu>
  */
 
-#ifndef _ARBITER_H
-#define _ARBITER_H
+#include "Reqresp.h"
 
-#include <boost/thread.hpp>
-#include <boost/date_time.hpp>
-#include "RequestWindow.h"
-
-struct Arbiter
+Reqresp::Reqresp(std::string url)
 {
-   Arbiter();
-   ~Arbiter();
-   void start();
-   void join();
-   void ProcessQueue();
-   boost::thread mThread;
-   RequestWindow *mReqWindow;   
-};
+   mComm = new Communicator(url, RECEIVER);
+   mComm->bind();
+}
 
-#endif
+Reqresp::~Reqresp()
+{
+   delete mComm;
+}
+
+void Reqresp::start()
+{
+   mThread = boost::thread(&Reqresp::ProcessReq, this);
+}
+
+void Reqresp::join()
+{
+   mThread.join();
+}
+
+void Reqresp::ProcessReq()
+{
+   while(true)
+   {
+      void *buf = NULL;
+      int bytes = mComm->receive(&buf);
+      assert(bytes >= 0);
+      mComm->freemsg(buf);
+   }
+}

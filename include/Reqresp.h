@@ -1,3 +1,4 @@
+
 /*
  * This file is part of evQueue
  * 
@@ -17,22 +18,21 @@
  * Author: Anshuman Goswami <anshumang@gatech.edu>
  */
 
-#ifndef _ARBITER_H
-#define _ARBITER_H
+#ifndef _REQRESP_H
+#define _REQRESP_H
 
 #include <boost/thread.hpp>
-#include <boost/date_time.hpp>
-#include "RequestWindow.h"
+#include "Communicator.h"
 
-struct Arbiter
+struct Reqresp
 {
-   Arbiter();
-   ~Arbiter();
+   Reqresp(std::string url);
+   ~Reqresp();
    void start();
    void join();
-   void ProcessQueue();
+   void ProcessReq();
    boost::thread mThread;
-   RequestWindow *mReqWindow;   
+   Communicator *mComm;
 };
 
 #endif

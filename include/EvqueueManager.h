@@ -32,7 +32,7 @@ struct EvqueueManager
   EvqueueClient *m_evqueue_client;
   Interposer *mIposer;
   Communicator *mComm, *mReq, *mResp;
-  EvqueueManager(void);
+  EvqueueManager(int tenantId);
   ~EvqueueManager(void);
   void synch(void);
   int launch(KernelIdentifier kid);
@@ -41,7 +41,7 @@ struct EvqueueManager
 
 extern EvqueueManager *gEvqm;
 
-extern "C" void EvqueueCreate();
+extern "C" void EvqueueCreate(int tenantId);
 extern "C" void EvqueueDestroy();
 extern "C" void EvqueueLaunch(KernelIdentifier k);
 extern "C" void EvqueueSynch();
