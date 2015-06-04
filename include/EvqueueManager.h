@@ -32,6 +32,7 @@ struct EvqueueManager
   EvqueueClient *m_evqueue_client;
   Interposer *mIposer;
   Communicator *mComm, *mReq, *mResp;
+  unsigned long mStartSysClock;
   EvqueueManager(int tenantId);
   ~EvqueueManager(void);
   void synch(void);

@@ -96,7 +96,7 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
 	  /*Use > 10ms*/
           if(kernel_record->end - kernel_record->start > 10000000)
           {
-            std::cout << kernel_record->end - kernel_record->start << " " << kernel_record->name << " " << kernel_record->gridX << " " << kernel_record->gridY << " " << kernel_record->gridZ << " " << kernel_record->blockX << " " << kernel_record->blockY << " " << kernel_record->blockZ << " " << std::endl;
+            std::cerr << kernel_record->start - m_start_timestamp << " " << kernel_record->name << " " << kernel_record->end - kernel_record->start << " " << kernel_record->gridX << " " << kernel_record->gridY << " " << kernel_record->gridZ << " " << kernel_record->blockX << " " << kernel_record->blockY << " " << kernel_record->blockZ << " " << std::endl;
             LongKernel use;
             msg->m_long_kernels.push_back(use);
           }
@@ -194,12 +194,12 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
         CUPTI_CALL(status);
       }
     } while (1);
-
+/*
     std::cout << numCompletions << "/" << numRecords << 
     "/" << numKernelRecords << 
     "," << msg->m_long_gaps.size() << 
     "," << msg->m_long_kernels.size() << std::endl;
-
+*/
     // report any records dropped from the queue
     size_t dropped;
     CUPTI_CALL(cuptiActivityGetNumDroppedRecords(ctx, streamId, &dropped));
@@ -207,8 +207,11 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
       printf("Dropped %u activity records\n", (unsigned int) dropped);
     }
     save_schedule(*msg);
+/*
     std::cout << "Sent bytes : " << msg->m_stream.tellp() << "/"
   << sizeof(ClientMessage) << "/" << sizeof(CUpti_ActivityKernel2)*numKernelRecords << std::endl;
+*/
+   std::cerr << numKernelRecords << "/" << msg->m_long_kernels.size() << std::endl;
    /*string ossbuf(msg->m_stream.str());
    gEvqm->mComm->send(reinterpret_cast<const void *>(ossbuf.c_str()), msg->m_stream.tellp());
    */
@@ -264,7 +267,9 @@ EvqueueManager::EvqueueManager(int tenantId)
 
   CUPTI_CALL(cuptiActivityRegisterCallbacks(bufferRequested, bufferCompleted));
   CUPTI_CALL(cuptiGetTimestamp(&m_start_timestamp));
-
+  struct timeval now;
+  gettimeofday(&now, NULL);
+  mStartSysClock = now.tv_sec * 1000000 + now.tv_usec;
 }
 
 EvqueueManager::~EvqueueManager(void)

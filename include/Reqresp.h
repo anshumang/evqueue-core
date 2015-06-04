@@ -27,12 +27,13 @@
 
 struct Reqresp
 {
-   Reqresp(std::string url);
+   Reqresp(std::string url, int tenantId);
    ~Reqresp();
    void start();
    void join();
    void ProcessReq();
    boost::thread mThread;
+   int mTenantId;
    Communicator *mComm;
 };
 

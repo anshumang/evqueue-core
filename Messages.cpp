@@ -43,7 +43,7 @@ std::ostream & operator<<(std::ostream &os, const ClientMessage &cm)
      os << "\n" << (*itg).trailing_block[0] << " " << (*itg).trailing_block[1] << " " << (*itg).trailing_block[2];
      os << "\n" << (*itg).duration;
   }
-  std::cout << os.tellp() << std::endl;
+  //std::cout << os.tellp() << std::endl;
   return os;
 }
 
@@ -54,7 +54,7 @@ void save_schedule(ClientMessage &cm){
     //cm.m_stream << oss.rdbuf();
     //cout << oss.rdbuf() << endl;
     cm.m_stream << cm;
-    std::cout << cm.m_stream.tellp() << std::endl;
+    //std::cout << cm.m_stream.tellp() << std::endl;
     //std::ofstream ofs(filename);
     //boost::archive::text_oarchive oa(ofs);
     //oa << this;

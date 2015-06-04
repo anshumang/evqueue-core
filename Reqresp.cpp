@@ -19,9 +19,10 @@
 
 #include "Reqresp.h"
 
-Reqresp::Reqresp(std::string url)
+Reqresp::Reqresp(std::string url, int tenantId)
 {
    std::cout << "Creating listener at " << url << std::endl;
+   mTenantId = tenantId;
    mComm = new Communicator(url, RECEIVER);
    mComm->bind();
 }
@@ -53,7 +54,7 @@ void Reqresp::ProcessReq()
       struct timeval now;
       gettimeofday(&now, NULL);
       std::cout
-	      << "Tenant 2 (pagerank) : "
+	      << "Tenant  : " << mTenantId << " "
 	      << now.tv_sec * 1000000 + now.tv_usec << " "
 	      << now.tv_sec * 1000000 + now.tv_usec - reqDesc->timestamp << " "
 	      << reqDesc->grid[0] << " "

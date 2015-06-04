@@ -292,12 +292,17 @@ int main(int argc,const char **argv)
                 Arbiter arb;
                 //arb.start();
 
-                Reqresp tenant2("ipc:///tmp/req2.ipc");
-                tenant2.start();
+                Reqresp tenant1("ipc:///tmp/req1.ipc" ,1);
+                tenant1.start();
 		
-                std::string url("ipc:///tmp/req1.ipc");
-		std::cout << "Creating listener at " << url << std::endl;
-                Communicator comm1(url, RECEIVER);
+                Reqresp tenant2("ipc:///tmp/req2.ipc", 2);
+                tenant2.start();
+                
+                tenant1.join();
+		
+                //std::string url("ipc:///tmp/req1.ipc");
+		//std::cout << "Creating listener at " << url << std::endl;
+                //Communicator comm1(url, RECEIVER);
                 //int mSock;
 		//assert((mSock = nn_socket(AF_SP, NN_PULL)) >= 0);
 		// Create listen socket
@@ -307,7 +312,7 @@ int main(int argc,const char **argv)
 		//optval=1;
 		//setsockopt(listen_socket,SOL_SOCKET,SO_REUSEADDR,&optval,sizeof(int));
 		
-                comm1.bind();
+                //comm1.bind();
 		//assert(nn_bind (mSock, url.c_str()) >= 0);
 		
 		// Listen on socket
@@ -322,11 +327,12 @@ int main(int argc,const char **argv)
 		
 		// Loop for incoming connections
 		int len,*sp;
-		std::cout << "Daemon starts listening at " << comm1.mSock  << " with URL of " << comm1.mURL << std::endl;
-		while(1)
-		{
+		//std::cout << "Daemon starts listening at " << comm1.mSock  << " with URL of " << comm1.mURL << std::endl;
+		//while(1)
+		//{
 			//remote_addr_len=sizeof(struct sockaddr);
 			//s = accept(listen_socket,(struct sockaddr *)&remote_addr,&remote_addr_len);
+                        /*
                         void *buf = NULL;
                         int bytes = comm1.receive(&buf);
 			//int bytes = nn_recv(mSock, &buf, NN_MSG, 0);
@@ -348,6 +354,7 @@ int main(int argc,const char **argv)
 				<< std::endl;
 
                         comm1.freemsg(buf);
+                        */
                         #if 0
 			if(s<0)
 			{
@@ -409,7 +416,7 @@ int main(int argc,const char **argv)
 			pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
 			pthread_create(&thread, &thread_attr, handle_connection, sp);
                         */
-		}
+		//}
 	}
 	catch(Exception &e)
 	{
