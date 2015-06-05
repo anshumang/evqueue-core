@@ -69,10 +69,14 @@ void Reqresp::ProcessReq()
       */
 
       RequestDescriptor *reqDesc = (RequestDescriptor*)buf;
+      std::cout << "Adding request ";
+      printReqDescriptor(reqDesc);
+      std::cout << " from " << mTenantId << std::endl;
       mArb->mReqWindow->addRequest(mTenantId, reqDesc);  
-      mArb->mReqWindow->addRequestor(mTenantId);
+      //mArb->mReqWindow->addRequestor(mTenantId);
       //the blocking in tenant is a result of delaying the receive()
       mArb->mReqWindow->waitForResponse(mTenantId);
+      std::cout << "Tenant " << mTenantId << " received response" << std::endl; 
       mComm->freemsg(buf);
    }
 }

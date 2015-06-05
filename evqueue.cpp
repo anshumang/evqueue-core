@@ -289,13 +289,13 @@ int main(int argc,const char **argv)
 		//struct sockaddr_in local_addr,remote_addr;
 		//socklen_t remote_addr_len;
 
-                Arbiter arb;
+                Arbiter arb(2);
                 //arb.start();
 
-                Reqresp tenant1("ipc:///tmp/req1.ipc" ,1, &arb);
+                Reqresp tenant1("ipc:///tmp/req1.ipc" ,0, &arb);
                 tenant1.start();
 		
-                Reqresp tenant2("ipc:///tmp/req2.ipc", 2, &arb);
+                Reqresp tenant2("ipc:///tmp/req2.ipc", 1, &arb);
                 tenant2.start();
                 
                 tenant1.join();

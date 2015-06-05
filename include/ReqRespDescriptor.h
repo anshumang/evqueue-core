@@ -21,6 +21,7 @@
 #define _REQRESP_DESCRIPTOR_H
 
 #include <string>
+#include <iostream>
 
 using namespace std;
 
@@ -45,5 +46,7 @@ struct ResponseDescriptor
    bool mNeedYield;
    long mRunSlice; //how long before yielding
 };
+
+void printReqDescriptor(RequestDescriptor * reqDesc);
 
 #endif

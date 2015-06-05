@@ -26,7 +26,7 @@
 
 struct Arbiter
 {
-   Arbiter();
+   Arbiter(int numTenants);
    ~Arbiter();
    void start();
    void join();

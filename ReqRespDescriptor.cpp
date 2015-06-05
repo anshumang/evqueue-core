@@ -26,3 +26,14 @@ KernelIdentifier::KernelIdentifier(string name, unsigned long grid[], unsigned l
   m_block[0]=block[0];m_block[1]=block[1];m_block[2]=block[2];
 }
 
+void printReqDescriptor(RequestDescriptor * reqDesc)
+{
+   std::cout << 
+   " " << reqDesc->timestamp <<
+   " " << reqDesc->grid[0] <<
+   " " << reqDesc->grid[1] <<
+   " " << reqDesc->grid[2] <<
+   " " << reqDesc->block[0] <<
+   " " << reqDesc->block[1] <<
+   " " << reqDesc->block[2];
+}

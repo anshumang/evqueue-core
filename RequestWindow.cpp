@@ -19,15 +19,19 @@
 
 #include "RequestWindow.h"
 
-RequestWindow::RequestWindow()
- : mPerTenantRequestQueue(2), mPerTenantReqReady(2, false)
+RequestWindow::RequestWindow(int numTenants)
+ : mTenants(numTenants), mPerTenantRequestQueue(numTenants), mPerTenantReqReady(numTenants, false)
 {
-
+    for(int i=0; i<numTenants; i++)
+    {
+       mPerTenantReqReady.push_back(new bool());
+       //mPerTenantLock.push_back(std::unique_ptr<std::mutex>(new std::mutex));
+       //mPerTenantNotify.push_back(std::unique_ptr<std::condition_variable>(new std::condition_variable));
+    }
 };
 
 void RequestWindow::addRequest(int tenantId, RequestDescriptor *reqDesc)
 {
-  std::cout << "Adding a request from tenant " << tenantId << std::endl;
   mPerTenantRequestQueue[tenantId].push(reqDesc);
 }
 
@@ -53,7 +57,7 @@ void RequestWindow::waitForResponse(int tenantId)
     lk.unlock();
 }
 
-void RequestWindow::releaseRequestor(int tenantId)
+void RequestWindow::sendResponse(int tenantId)
 {
     std::lock_guard<std::mutex> lk(mPerTenantLock[tenantId]);
     mPerTenantReqReady[tenantId] = true;

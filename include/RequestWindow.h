@@ -26,17 +26,20 @@
 #include <mutex>
 #include <condition_variable>
 #include <utility>
+//#include <memory> //For unique_ptr and shared_ptr
+#include <array>
 #include <algorithm>
 #include "ReqRespDescriptor.h"
 
 struct RequestWindow
 {
+  int mTenants;
   std::vector <std::queue <RequestDescriptor *> > mPerTenantRequestQueue;
   std::set <int> mWaitingTenantId;
   std::vector<bool> mPerTenantReqReady;
-  std::vector<std::mutex> mPerTenantLock;
-  std::vector<std::condition_variable> mPerTenantNotify;
-  RequestWindow();
+  std::array<std::mutex, 2> mPerTenantLock;
+  std::array<std::condition_variable, 2> mPerTenantNotify;
+  RequestWindow(int numTenants);
   //mPerTenantRequestQueue helpers
   void addRequest(int tenantId, RequestDescriptor *reqDesc);
   RequestDescriptor* peekRequest(int tenantId);
@@ -44,5 +47,5 @@ struct RequestWindow
   void addRequestor(int tenantId);
   void removeRequestor(int tenantId);
   void waitForResponse(int tenantId);
-  void releaseRequestor(int tenantId);
+  void sendResponse(int tenantId);
 };

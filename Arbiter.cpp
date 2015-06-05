@@ -19,9 +19,9 @@
 
 #include "Arbiter.h"
 
-Arbiter::Arbiter()
+Arbiter::Arbiter(int numTenants)
 {
-   mReqWindow = new RequestWindow();
+   mReqWindow = new RequestWindow(numTenants);
 }
 
 Arbiter::~Arbiter()
@@ -46,17 +46,27 @@ void Arbiter::ProcessQueue()
   while(true) //runs forever
   {
 	  boost::this_thread::sleep(epoch);
+          std::cout << "Epoch elapsed" << std::endl;
 	  //queue get processed here
           auto tenantId = 0;
           std::vector<std::pair<unsigned long, int>> deadlinesPerTenant;
           for (auto const& p : mReqWindow->mPerTenantRequestQueue)
           {
+            std::cout << "Peeking at request ";
+            printReqDescriptor(mReqWindow->peekRequest(tenantId));
+            std::cout << " from " << tenantId << std::endl;
             auto q = std::make_pair(mReqWindow->peekRequest(tenantId)->timestamp, tenantId);
             deadlinesPerTenant.push_back(q); //for now, arrivalsPerTenant
             tenantId++;
           }
           std::sort(deadlinesPerTenant.begin(), deadlinesPerTenant.end());
-          std::cout << "Epoch elapsed" << std::endl;
+          for (auto const& p : deadlinesPerTenant)
+          {
+             std::cout << "Sending response to " << p.second << std::endl;
+             mReqWindow->sendResponse(p.second);
+	     boost::posix_time::milliseconds subepoch(1);
+             boost::this_thread::sleep(subepoch); //Space out the responses to avoid packet reordering
+          }
 	  boost::this_thread::interruption_point(); //otherwise this thread can't be terminated
   } 
 }
