@@ -26,16 +26,18 @@
 #include "ReqRespDescriptor.h"
 #include "Arbiter.h"
 
+
 struct Reqresp
 {
-   Reqresp(std::string url, int tenantId, Arbiter *arb);
+   Reqresp(std::string reqUrl, std::string respUrl, int tenantId, Arbiter *arb);
    ~Reqresp();
    void start();
    void join();
    void ProcessReq();
+   void SendResponse();
    boost::thread mThread;
    int mTenantId;
-   Communicator *mComm;
+   Communicator *mReqComm, *mRespComm;
    Arbiter *mArb;
 };
 

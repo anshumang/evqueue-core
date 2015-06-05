@@ -19,17 +19,22 @@
 
 #include "Reqresp.h"
 
-Reqresp::Reqresp(std::string url, int tenantId, Arbiter *arb)
+Reqresp::Reqresp(std::string req_url, std::string resp_url, int tenantId, Arbiter *arb)
   : mTenantId(tenantId), mArb(arb)
 {
-   std::cout << "Creating listener at " << url << std::endl;
-   mComm = new Communicator(url, RECEIVER);
-   mComm->bind();
+     std::cout << "Creating listener at " << req_url << std::endl;
+     mReqComm = new Communicator(req_url, RECEIVER);
+     mReqComm->bind();
+
+     std::cout << "Creating responder at " << resp_url << std::endl;
+     mRespComm = new Communicator(resp_url, SENDER);
+     mRespComm->connect();
 }
 
 Reqresp::~Reqresp()
 {
-   delete mComm;
+   delete mReqComm;
+   delete mRespComm;
 }
 
 void Reqresp::start()
@@ -42,13 +47,21 @@ void Reqresp::join()
    mThread.join();
 }
 
+void Reqresp::SendResponse()
+{
+   ResponseDescriptor respDesc;
+   respDesc.mNeedYield = false;
+   respDesc.mRunSlice = 10000000; //10 ms
+   mRespComm->send(&respDesc, sizeof(ResponseDescriptor)); 
+}
+
 void Reqresp::ProcessReq()
 {
-   std::cout << "Daemon starts listening at " << mComm->mSock  << " with URL of " << mComm->mURL << std::endl;
+   std::cout << "Daemon starts listening at " << mReqComm->mSock  << " with URL of " << mReqComm->mURL << std::endl;
    while(true)
    {
       void *buf = NULL;
-      int bytes = mComm->receive(&buf);
+      int bytes = mReqComm->receive(&buf);
       assert(bytes >= 0);
 
       /*
@@ -77,6 +90,7 @@ void Reqresp::ProcessReq()
       //the blocking in tenant is a result of delaying the receive()
       mArb->mReqWindow->waitForResponse(mTenantId);
       std::cout << "Tenant " << mTenantId << " received response" << std::endl; 
-      mComm->freemsg(buf);
+      SendResponse();
+      mReqComm->freemsg(buf);
    }
 }

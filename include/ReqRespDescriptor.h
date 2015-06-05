@@ -48,5 +48,6 @@ struct ResponseDescriptor
 };
 
 void printReqDescriptor(RequestDescriptor * reqDesc);
+void printRespDescriptor(ResponseDescriptor * respDesc);
 
 #endif

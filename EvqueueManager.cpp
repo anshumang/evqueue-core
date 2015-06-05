@@ -233,18 +233,23 @@ EvqueueManager::EvqueueManager(int tenantId)
   //assert((mSock = nn_socket(AF_SP, NN_PUSH)) >= 0);
   //assert(nn_connect (mSock, url.c_str()) >= 0);
 
-  std::string url;
+  std::string req_url, resp_url;
   if (tenantId == 1)
   {  
-     url = "ipc:///tmp/req1.ipc";
+     req_url = "ipc:///tmp/req1.ipc";
+     resp_url = "ipc:///tmp/resp1.ipc";
   }
   else
   {
-     url = "ipc:///tmp/req2.ipc";
+     req_url = "ipc:///tmp/req2.ipc";
+     resp_url = "ipc:///tmp/resp2.ipc";
   }
-  std::cout << "Creating sender at " << url  << " for tenant " << tenantId << std::endl; 
-  mReq = new Communicator(url, SENDER);
+  std::cout << "Creating sender at " << req_url  << " for tenant " << tenantId << std::endl; 
+  std::cout << "Creating receiver at " << resp_url  << " for tenant " << tenantId << std::endl; 
+  mReq = new Communicator(req_url, SENDER);
   mReq->connect();
+  mResp = new Communicator(resp_url, RECEIVER);
+  mResp->bind();
 
   size_t attrValue = 0, attrValueSize = sizeof(size_t);
   attrValue = 32 * 1024 * 1024;

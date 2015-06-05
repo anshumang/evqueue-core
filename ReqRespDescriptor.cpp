@@ -37,3 +37,10 @@ void printReqDescriptor(RequestDescriptor * reqDesc)
    " " << reqDesc->block[1] <<
    " " << reqDesc->block[2];
 }
+
+void printRespDescriptor(ResponseDescriptor *respDesc)
+{
+   std::cout <<
+   " " << respDesc->mNeedYield <<
+   " " << respDesc->mRunSlice;
+}

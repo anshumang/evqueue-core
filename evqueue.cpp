@@ -290,15 +290,15 @@ int main(int argc,const char **argv)
 		//socklen_t remote_addr_len;
 
                 Arbiter arb(2);
-                //arb.start();
+                arb.start();
 
-                Reqresp tenant1("ipc:///tmp/req1.ipc" ,0, &arb);
+                Reqresp tenant1("ipc:///tmp/req1.ipc", "ipc:///tmp/resp1.ipc", 0, &arb);
                 tenant1.start();
 		
-                Reqresp tenant2("ipc:///tmp/req2.ipc", 1, &arb);
+                Reqresp tenant2("ipc:///tmp/req2.ipc", "ipc:///tmp/resp2.ipc", 1, &arb);
                 tenant2.start();
-                
-                tenant1.join();
+
+                arb.join();
 		
 		// Create listen socket
 		//listen_socket=socket(PF_INET,SOCK_STREAM,0);

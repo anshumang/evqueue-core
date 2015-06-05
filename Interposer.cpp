@@ -54,6 +54,17 @@
    << std::endl;
 
    gEvqm->mReq->send(sendbuf, sizeof(RequestDescriptor)+kid.m_name.length()+1);
+   while(true)
+   {
+     void *buf = NULL;
+     int bytes = gEvqm->mResp->receive(&buf);
+     assert(bytes >= 0);
+     ResponseDescriptor *respDesc = (ResponseDescriptor*)buf;
+     std::cout << "Received response ";
+     printRespDescriptor(respDesc);
+     std::cout << std::endl;
+     break;
+   }
    return 0;
 }
 
