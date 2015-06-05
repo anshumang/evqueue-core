@@ -25,6 +25,8 @@
 #include <set>
 #include <mutex>
 #include <condition_variable>
+#include <utility>
+#include <algorithm>
 #include "ReqRespDescriptor.h"
 
 struct RequestWindow

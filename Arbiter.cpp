@@ -47,11 +47,15 @@ void Arbiter::ProcessQueue()
   {
 	  boost::this_thread::sleep(epoch);
 	  //queue get processed here
-          //C++11 support needed
-          //for (auto const& p : mReqWindow->getProcesses())
-          //{
-             //mReqWindow->getRequests(p);
-          //}
+          auto tenantId = 0;
+          std::vector<std::pair<unsigned long, int>> deadlinesPerTenant;
+          for (auto const& p : mReqWindow->mPerTenantRequestQueue)
+          {
+            auto q = std::make_pair(mReqWindow->peekRequest(tenantId)->timestamp, tenantId);
+            deadlinesPerTenant.push_back(q); //for now, arrivalsPerTenant
+            tenantId++;
+          }
+          std::sort(deadlinesPerTenant.begin(), deadlinesPerTenant.end());
           std::cout << "Epoch elapsed" << std::endl;
 	  boost::this_thread::interruption_point(); //otherwise this thread can't be terminated
   } 
