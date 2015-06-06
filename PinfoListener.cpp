@@ -17,27 +17,38 @@
  * Author: Anshuman Goswami <anshumang@gatech.edu>
  */
 
-#ifndef _REQRESP_H
-#define _REQRESP_H
+#include "PinfoListener.h"
 
-#include <boost/thread.hpp>
-#include "Communicator.h"
-#include "ReqRespDescriptor.h"
-#include "Arbiter.h"
-
-
-struct Reqresp
+PinfoListener::PinfoListener(std::string url)
 {
-   Reqresp(std::string reqUrl, std::string respUrl, int tenantId, Arbiter *arb);
-   ~Reqresp();
-   void start();
-   void join();
-   void ProcessReq();
-   void SendResponse();
-   boost::thread mThread;
-   int mTenantId;
-   Communicator *mReqComm, *mRespComm;
-   Arbiter *mArb;
-};
+   std::cout << "Creating PinfoListener at " << url << std::endl;
+   mComm = new Communicator(url, RECEIVER);
+   mComm->bind();
+}
 
-#endif
+PinfoListener::~PinfoListener()
+{
+   delete mComm;
+}
+
+void PinfoListener::start()
+{
+   mThread = std::thread(&PinfoListener::ProcessPinfo, this);
+}
+
+void PinfoListener::join()
+{
+   mThread.join();
+}
+
+void PinfoListener::ProcessPinfo()
+{
+   while(true)
+   {
+     void *buf = NULL;
+     int bytes = mComm->receive(&buf);
+     assert(bytes >= 0);
+     ProfileInfo *pinfo = (ProfileInfo*)buf;
+     pinfo->printPinfo();
+   }
+}

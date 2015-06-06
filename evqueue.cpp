@@ -62,6 +62,7 @@
 #include "Communicator.h"
 #include "Arbiter.h"
 #include "Reqresp.h"
+#include "PinfoListener.h"
 
 //int listen_socket;//Moved definition to WorkflowInstance.cpp because this file is not built when generating the lib
 
@@ -288,6 +289,9 @@ int main(int argc,const char **argv)
 		//int re,s,optval;
 		//struct sockaddr_in local_addr,remote_addr;
 		//socklen_t remote_addr_len;
+
+                //PinfoListener pil("ipc:///tmp/pinfo.ipc");
+                //pil.start();
 
                 Arbiter arb(2);
                 arb.start();

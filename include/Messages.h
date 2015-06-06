@@ -31,8 +31,9 @@
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/list.hpp>
 #include <boost/serialization/assume_abstract.hpp>
-
+#include <algorithm>
 #include <sstream>
+#include <string>
 
 using namespace std;
 
@@ -71,6 +72,15 @@ class ClientMessage
        //void save_schedule();
        //void save_schedule(const char *filename);
        //friend void save_schedule(ClientMessage &cm);
+};
+
+struct ProfileInfo
+{
+   int mNumLongKernels;
+   //std::array<LongKernel, mNumLongKernels> mLongKernels
+   LongKernel *mLongKernels;
+   ProfileInfo(int, std::vector<LongKernel>);
+   void printPinfo();
 };
 
 void save_schedule(ClientMessage &cm);

@@ -59,3 +59,32 @@ void save_schedule(ClientMessage &cm){
     //boost::archive::text_oarchive oa(ofs);
     //oa << this;
 }
+
+
+ProfileInfo::ProfileInfo(int numLongKernels, std::vector<LongKernel>vecLongKernels)
+  : mNumLongKernels(numLongKernels)
+{
+   //std::copy(vecLongKernels.begin(), vecLongKernels.end(), mLongKernels);
+   mLongKernels = new LongKernel[numLongKernels];
+   std::copy(vecLongKernels.begin(), vecLongKernels.end(), mLongKernels);
+}
+
+void ProfileInfo::printPinfo()
+{
+   std::cout <<
+   mNumLongKernels <<
+   std::endl;
+   LongKernel *klist = mLongKernels;
+   for(int i=0; i<mNumLongKernels; i++)
+   {
+      std::cout 
+      << klist[i].grid[0] << " "
+      << klist[i].grid[1] << " "
+      << klist[i].grid[2] << " "
+      << klist[i].block[0] << " "
+      << klist[i].block[1] << " "
+      << klist[i].block[2] << " "
+      << klist[i].duration <<
+      std::endl;
+   }
+}

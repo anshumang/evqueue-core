@@ -144,6 +144,13 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
           {
             std::cerr << kernel_record->start - m_start_timestamp << " " << kernel_record->name << " " << kernel_record->end - kernel_record->start << " " << kernel_record->gridX << " " << kernel_record->gridY << " " << kernel_record->gridZ << " " << kernel_record->blockX << " " << kernel_record->blockY << " " << kernel_record->blockZ << " " << std::endl;
             LongKernel use;
+            use.grid[0]=kernel_record->gridX;
+            use.grid[1]=kernel_record->gridY;
+            use.grid[2]=kernel_record->gridZ;
+            use.block[0]=kernel_record->blockX;
+            use.block[1]=kernel_record->blockY;
+            use.block[2]=kernel_record->blockZ;
+            use.duration=kernel_record->end - kernel_record->start;
             msg->m_long_kernels.push_back(use);
           }
         }
@@ -252,15 +259,20 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
     if (dropped != 0) {
       printf("Dropped %u activity records\n", (unsigned int) dropped);
     }
-    save_schedule(*msg);
+    //save_schedule(*msg);
 /*
     std::cout << "Sent bytes : " << msg->m_stream.tellp() << "/"
   << sizeof(ClientMessage) << "/" << sizeof(CUpti_ActivityKernel2)*numKernelRecords << std::endl;
 */
-   std::cerr << numKernelRecords << "/" << msg->m_long_kernels.size() << std::endl;
+   ProfileInfo pinfo(msg->m_long_kernels.size(), msg->m_long_kernels);
+   std::cerr << numKernelRecords << "/" << msg->m_long_kernels.size() << "/" << sizeof(pinfo.mNumLongKernels)+pinfo.mNumLongKernels*sizeof(LongKernel) << std::endl;
+   void *buf = new char[sizeof(pinfo.mNumLongKernels)+pinfo.mNumLongKernels*sizeof(LongKernel)];
+   std::memcpy(buf, &(pinfo.mNumLongKernels), sizeof(pinfo.mNumLongKernels));
+   std::memcpy(reinterpret_cast<char *>(buf)+sizeof(pinfo.mNumLongKernels), pinfo.mLongKernels, pinfo.mNumLongKernels*sizeof(LongKernel));
    /*string ossbuf(msg->m_stream.str());
    gEvqm->mComm->send(reinterpret_cast<const void *>(ossbuf.c_str()), msg->m_stream.tellp());
    */
+   gEvqm->mComm->send(buf, sizeof(pinfo.mNumLongKernels)+pinfo.mNumLongKernels*sizeof(LongKernel));
    //int bytes = nn_send(mSock, (void *)(ossbuf.c_str()), msg->m_stream.tellp(), 0);
    //assert(bytes >= 0);
   }

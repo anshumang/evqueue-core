@@ -52,6 +52,10 @@ EvqueueManager::EvqueueManager(int tenantId)
   mResp = new Communicator(resp_url, RECEIVER);
   mResp->bind();
 
+  std::string url("ipc:///tmp/pinfo.ipc");
+  mComm = new Communicator(url, SENDER);
+  mComm->connect();
+
   size_t attrValue = 0, attrValueSize = sizeof(size_t);
   attrValue = 32 * 1024 * 1024;
   CUPTI_CALL(cuptiActivitySetAttribute(CUPTI_ACTIVITY_ATTR_DEVICE_BUFFER_SIZE, &attrValueSize, &attrValue));
