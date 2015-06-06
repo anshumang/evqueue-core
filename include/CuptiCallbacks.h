@@ -24,6 +24,8 @@
 #include <climits>
 #include <iostream>
 #include <cupti.h>
+#include "EvqueueManager.h"
+#include "Messages.h"
 
 #define CUPTI_CALL(call)                                                \
   do {                                                                  \

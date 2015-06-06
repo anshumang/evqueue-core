@@ -21,15 +21,15 @@
 #define _EVQUEUE_MANAGER_H_
 
 #include <cassert>
-#include "EvqueueClient.h"
+#include "CuptiCallbacks.h"
+//#include "EvqueueClient.h"
 #include "Messages.h"
 #include "Interposer.h"
 #include "Communicator.h"
-#include "CuptiCallbacks.h"
 
 struct EvqueueManager
 {
-  EvqueueClient *m_evqueue_client;
+  //EvqueueClient *m_evqueue_client;
   Interposer *mIposer;
   Communicator *mComm, *mReq, *mResp;
   unsigned long mStartSysClock;
