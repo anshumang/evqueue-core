@@ -20,6 +20,7 @@
 #ifndef _PINFOLISTENER_H
 #define _PINFOLISTENER_H
 
+#include <boost/thread.hpp>
 #include "Communicator.h"
 #include "Messages.h"
 #include <thread>

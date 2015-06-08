@@ -35,6 +35,15 @@ void RequestWindow::addRequest(int tenantId, RequestDescriptor *reqDesc)
   mPerTenantRequestQueue[tenantId].push(reqDesc);
 }
 
+bool RequestWindow::hasRequest(int tenantId)
+{
+    if(mPerTenantRequestQueue[tenantId].empty())
+    {
+       return false;
+    }
+    return true;
+}
+
 RequestDescriptor* RequestWindow::peekRequest(int tenantId)
 {
    return mPerTenantRequestQueue[tenantId].front();

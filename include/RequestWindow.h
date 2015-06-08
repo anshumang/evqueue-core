@@ -42,6 +42,7 @@ struct RequestWindow
   RequestWindow(int numTenants);
   //mPerTenantRequestQueue helpers
   void addRequest(int tenantId, RequestDescriptor *reqDesc);
+  bool hasRequest(int tenantId);
   RequestDescriptor* peekRequest(int tenantId);
   //mWaitingTenantId helpers
   void addRequestor(int tenantId);

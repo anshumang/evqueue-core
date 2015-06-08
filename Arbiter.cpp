@@ -47,19 +47,30 @@ void Arbiter::ProcessQueue()
   {
 	  boost::this_thread::sleep(epoch);
           std::cout << "Epoch elapsed" << std::endl;
-	  //queue get processed here
+	  //queue gets processed here
           auto tenantId = 0;
           std::vector<std::pair<unsigned long, int>> deadlinesPerTenant;
           for (auto const& p : mReqWindow->mPerTenantRequestQueue)
           {
-            std::cout << "Peeking at request ";
-            printReqDescriptor(mReqWindow->peekRequest(tenantId));
-            std::cout << " from " << tenantId << std::endl;
-            auto q = std::make_pair(mReqWindow->peekRequest(tenantId)->timestamp, tenantId);
-            deadlinesPerTenant.push_back(q); //for now, arrivalsPerTenant
+            if(mReqWindow->hasRequest(tenantId))
+            {
+                std::cout << "Peeking at request ";
+                printReqDescriptor(mReqWindow->peekRequest(tenantId));
+                std::cout << " from " << tenantId << std::endl;
+                auto q = std::make_pair(mReqWindow->peekRequest(tenantId)->timestamp, tenantId);
+                deadlinesPerTenant.push_back(q); //for now, arrivalsPerTenant
+            }
+            else
+            {
+                 std::cout << "No request found from " << tenantId << std::endl;
+            }
             tenantId++;
           }
+
+          //scheduling policy
           std::sort(deadlinesPerTenant.begin(), deadlinesPerTenant.end());
+
+          //send responses
           for (auto const& p : deadlinesPerTenant)
           {
              std::cout << "Sending response to " << p.second << std::endl;

@@ -33,6 +33,7 @@ PinfoListener::~PinfoListener()
 
 void PinfoListener::start()
 {
+   std::cout << "In ProcessPinfo thread" << std::endl;
    mThread = std::thread(&PinfoListener::ProcessPinfo, this);
 }
 

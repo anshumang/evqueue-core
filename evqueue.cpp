@@ -290,8 +290,8 @@ int main(int argc,const char **argv)
 		//struct sockaddr_in local_addr,remote_addr;
 		//socklen_t remote_addr_len;
 
-                //PinfoListener pil("ipc:///tmp/pinfo.ipc");
-                //pil.start();
+                PinfoListener pil("ipc:///tmp/pinfo.ipc");
+                pil.start();
 
                 Arbiter arb(2);
                 arb.start();
