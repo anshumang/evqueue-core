@@ -264,11 +264,18 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
     std::cout << "Sent bytes : " << msg->m_stream.tellp() << "/"
   << sizeof(ClientMessage) << "/" << sizeof(CUpti_ActivityKernel2)*numKernelRecords << std::endl;
 */
+   //LongKernel* long_kernels = &msg->m_long_kernels[0];
+   //ProfileInfo pinfo(msg->m_long_kernels.size(), reinterpret_cast<void *>(long_kernels));
    ProfileInfo pinfo(msg->m_long_kernels.size(), msg->m_long_kernels);
+   pinfo.printPinfo();
    std::cerr << numKernelRecords << "/" << msg->m_long_kernels.size() << "/" << sizeof(pinfo.mNumLongKernels)+pinfo.mNumLongKernels*sizeof(LongKernel) << std::endl;
    void *buf = new char[sizeof(pinfo.mNumLongKernels)+pinfo.mNumLongKernels*sizeof(LongKernel)];
    std::memcpy(buf, &(pinfo.mNumLongKernels), sizeof(pinfo.mNumLongKernels));
    std::memcpy(reinterpret_cast<char *>(buf)+sizeof(pinfo.mNumLongKernels), pinfo.mLongKernels, pinfo.mNumLongKernels*sizeof(LongKernel));
+   /*for(int i=0; i<msg->m_long_kernels.size() * 7; i++)
+   {
+      std::cout << *((uint64_t *)((char *)buf+sizeof(pinfo.mNumLongKernels))+i)  << std::endl;
+   }*/
    /*string ossbuf(msg->m_stream.str());
    gEvqm->mComm->send(reinterpret_cast<const void *>(ossbuf.c_str()), msg->m_stream.tellp());
    */

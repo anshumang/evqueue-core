@@ -61,12 +61,16 @@ void save_schedule(ClientMessage &cm){
 }
 
 
-ProfileInfo::ProfileInfo(int numLongKernels, std::vector<LongKernel>vecLongKernels)
+ProfileInfo::ProfileInfo(int numLongKernels, std::vector<LongKernel> vecLongKernels)
   : mNumLongKernels(numLongKernels)
 {
    //std::copy(vecLongKernels.begin(), vecLongKernels.end(), mLongKernels);
    mLongKernels = new LongKernel[numLongKernels];
    std::copy(vecLongKernels.begin(), vecLongKernels.end(), mLongKernels);
+   //for(int i=0; i<mNumLongKernels; i++)
+   //{
+      //mLongKernels[i] = reinterpret_cast<LongKernel *>(longKernels)[i];
+   //}
 }
 
 void ProfileInfo::printPinfo()
