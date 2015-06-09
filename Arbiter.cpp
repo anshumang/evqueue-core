@@ -19,7 +19,8 @@
 
 #include "Arbiter.h"
 
-Arbiter::Arbiter(int numTenants)
+Arbiter::Arbiter(int numTenants, PinfoStore& pinfos)
+ : mPinfos(pinfos)
 {
    mReqWindow = new RequestWindow(numTenants);
 }
@@ -50,6 +51,7 @@ void Arbiter::ProcessQueue()
 	  //queue gets processed here
           auto tenantId = 0;
           std::vector<std::pair<unsigned long, int>> deadlinesPerTenant;
+          
           for (auto const& p : mReqWindow->mPerTenantRequestQueue)
           {
             if(mReqWindow->hasRequest(tenantId))

@@ -17,27 +17,35 @@
  * Author: Anshuman Goswami <anshumang@gatech.edu>
  */
 
-#ifndef _PINFOLISTENER_H
-#define _PINFOLISTENER_H
+#ifndef _PINFOSTORE_H
+#define _PINFOSTORE_H
 
-#include <boost/thread.hpp>
-#include "Communicator.h"
 #include "Messages.h"
-#include "PinfoStore.h"
-#include <thread>
 #include <map>
 #include <utility>
 
-struct PinfoListener
+struct KernelSignature
 {
-  PinfoListener(std::string url, PinfoStore& pinfos);
-  ~PinfoListener();
-  void start();
-  void join();
-  void ProcessPinfo();
-  Communicator *mComm;
-  std::thread mThread;
-  PinfoStore& mPinfos;
+   unsigned long mGridX;
+   unsigned long mGridY;
+   unsigned long mGridZ;
+   unsigned long mBlockX;
+   unsigned long mBlockY;
+   unsigned long mBlockZ;
+};
+
+struct CompareKernelSignature
+{
+  bool operator()(KernelSignature ks1, KernelSignature ks2)
+  {
+     return ks1.mGridX*ks1.mGridY*ks1.mGridZ < ks2.mGridX*ks2.mGridY*ks2.mGridZ;
+  }
+};
+
+struct PinfoStore
+{
+  void addPinfo(std::pair<KernelSignature, unsigned long>);
+  std::multimap<KernelSignature, unsigned long, CompareKernelSignature> mSignatureDurationMultimap;
 };
 
 #endif

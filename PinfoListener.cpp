@@ -19,7 +19,8 @@
 
 #include "PinfoListener.h"
 
-PinfoListener::PinfoListener(std::string url)
+PinfoListener::PinfoListener(std::string url, PinfoStore& pinfos)
+  : mPinfos(pinfos)
 {
    std::cout << "Creating PinfoListener at " << url << std::endl;
    mComm = new Communicator(url, RECEIVER);
@@ -65,6 +66,12 @@ void PinfoListener::ProcessPinfo()
         longKernel.block[2] = lk->block[2];
         longKernel.duration = lk->duration;
         vecLongKernels.push_back(longKernel);
+        KernelSignature ks;
+        ks.mGridX = longKernel.grid[0]; ks.mGridY = longKernel.grid[1]; ks.mGridZ = longKernel.grid[2];
+        ks.mBlockX = longKernel.block[0]; ks.mBlockY = longKernel.block[1]; ks.mBlockZ = longKernel.block[2];
+        std::pair<KernelSignature, unsigned long> temp;
+        temp.first = ks;
+        temp.second = reinterpret_cast<unsigned long>(longKernel.duration);
      }
      //ProfileInfo pinfo((*(int *)buf), (int *)buf+sizeof(int));
      ProfileInfo pinfo(vecLongKernels.size(), vecLongKernels);

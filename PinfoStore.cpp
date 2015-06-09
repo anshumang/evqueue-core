@@ -17,27 +17,9 @@
  * Author: Anshuman Goswami <anshumang@gatech.edu>
  */
 
-#ifndef _PINFOLISTENER_H
-#define _PINFOLISTENER_H
-
-#include <boost/thread.hpp>
-#include "Communicator.h"
-#include "Messages.h"
 #include "PinfoStore.h"
-#include <thread>
-#include <map>
-#include <utility>
 
-struct PinfoListener
+void PinfoStore::addPinfo(std::pair<KernelSignature, unsigned long> pinfo)
 {
-  PinfoListener(std::string url, PinfoStore& pinfos);
-  ~PinfoListener();
-  void start();
-  void join();
-  void ProcessPinfo();
-  Communicator *mComm;
-  std::thread mThread;
-  PinfoStore& mPinfos;
-};
-
-#endif
+   mSignatureDurationMultimap.insert(pinfo);
+}

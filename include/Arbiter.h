@@ -23,10 +23,11 @@
 #include <boost/thread.hpp>
 #include <boost/date_time.hpp>
 #include "RequestWindow.h"
+#include "PinfoStore.h"
 
 struct Arbiter
 {
-   Arbiter(int numTenants);
+   Arbiter(int numTenants, PinfoStore& pinfos);
    ~Arbiter();
    void start();
    void join();
@@ -34,6 +35,7 @@ struct Arbiter
    boost::thread mThread;
    RequestWindow *mReqWindow;   
    friend struct Reqresp;
+   PinfoStore& mPinfos;
 };
 
 #endif

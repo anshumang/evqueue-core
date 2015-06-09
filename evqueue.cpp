@@ -290,10 +290,12 @@ int main(int argc,const char **argv)
 		//struct sockaddr_in local_addr,remote_addr;
 		//socklen_t remote_addr_len;
 
-                PinfoListener pil("ipc:///tmp/pinfo.ipc");
+                PinfoStore pinfos;
+
+                PinfoListener pil("ipc:///tmp/pinfo.ipc", pinfos);
                 pil.start();
 
-                Arbiter arb(2);
+                Arbiter arb(2, pinfos);
                 arb.start();
 
                 Reqresp tenant1("ipc:///tmp/req1.ipc", "ipc:///tmp/resp1.ipc", 0, &arb);
