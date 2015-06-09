@@ -23,12 +23,31 @@
 void PinfoStore::addPinfo(std::pair<KernelSignature, unsigned long> pinfo)
 {
    auto search = mSignatureDurationMultimap.find(pinfo.first);
+   //If key not present, insert
+   if(search == mSignatureDurationMultimap.end())
+   {
+     std::cout << "[Key Not Present] Adding pinfo of duration " << pinfo.second << std::endl;
+     mSignatureDurationMultimap.insert(pinfo);
+     return;
+   }
+   //If key present, insert if value is significantly different
+   bool toInsert = true;
+   std::cout << "Iterating over values with same key" << std::endl;
    while(search != mSignatureDurationMultimap.end())
    {
-     if(std::abs(search->second-pinfo.second)>10000000) //only insert if duration differs by more than 10 ms
+     std::cout << "Found pinfo of duration " << search->second << " " << std::abs((long)(search->second)-(long)(pinfo.second)) << std::endl;
+     if(std::abs((long)(search->second)-(long)(pinfo.second))<10000000) //if a close enough value already present, do not insert
      {
-       mSignatureDurationMultimap.insert(pinfo);
+       std::cout << "Not inserting this key because already present value is " << search->second << " and looking to insert value " << pinfo.second << std::endl;
+       toInsert = false;
+       break;
      }
      search++;
+   }
+   std::cout << "Done iterating" << std::endl;
+   if(toInsert)
+   {
+      std::cout << "[Key Present] Adding pinfo of duration " << pinfo.second << std::endl;
+      mSignatureDurationMultimap.insert(pinfo);
    }
 }
