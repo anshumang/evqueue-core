@@ -18,8 +18,17 @@
  */
 
 #include "PinfoStore.h"
+#include <cstdlib>
 
 void PinfoStore::addPinfo(std::pair<KernelSignature, unsigned long> pinfo)
 {
-   mSignatureDurationMultimap.insert(pinfo);
+   auto search = mSignatureDurationMultimap.find(pinfo.first);
+   while(search != mSignatureDurationMultimap.end())
+   {
+     if(std::abs(search->second-pinfo.second)>10000000) //only insert if duration differs by more than 10 ms
+     {
+       mSignatureDurationMultimap.insert(pinfo);
+     }
+     search++;
+   }
 }

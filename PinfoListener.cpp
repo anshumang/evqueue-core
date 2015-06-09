@@ -72,6 +72,7 @@ void PinfoListener::ProcessPinfo()
         std::pair<KernelSignature, unsigned long> temp;
         temp.first = ks;
         temp.second = reinterpret_cast<unsigned long>(longKernel.duration);
+        mPinfos.addPinfo(temp);
      }
      //ProfileInfo pinfo((*(int *)buf), (int *)buf+sizeof(int));
      ProfileInfo pinfo(vecLongKernels.size(), vecLongKernels);

@@ -56,10 +56,18 @@ void Arbiter::ProcessQueue()
           {
             if(mReqWindow->hasRequest(tenantId))
             {
+                RequestDescriptor *reqDesc = mReqWindow->peekRequest(tenantId);
                 std::cout << "Peeking at request ";
-                printReqDescriptor(mReqWindow->peekRequest(tenantId));
+                printReqDescriptor(reqDesc);
                 std::cout << " from " << tenantId << std::endl;
-                auto q = std::make_pair(mReqWindow->peekRequest(tenantId)->timestamp, tenantId);
+                auto q = std::make_pair(reqDesc->timestamp, tenantId);
+                KernelSignature ks;
+                ks.mGridX = reqDesc->grid[0];
+                ks.mGridY = reqDesc->grid[1];
+                ks.mGridZ = reqDesc->grid[2];
+                ks.mBlockX = reqDesc->block[0];
+                ks.mBlockY = reqDesc->block[1];
+                ks.mBlockZ = reqDesc->block[2];
                 deadlinesPerTenant.push_back(q); //for now, arrivalsPerTenant
             }
             else
