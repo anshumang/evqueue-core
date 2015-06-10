@@ -50,8 +50,8 @@ void PinfoListener::ProcessPinfo()
      void *buf = NULL;
      int bytes = mComm->receive(&buf);
      assert(bytes >= 0);
-     std::cout << "Pinfo(bytes) : " << bytes << std::endl;
-     std::cout << "No of records : " << *(int *)buf << std::endl;
+     //std::cout << "Pinfo(bytes) : " << bytes << std::endl;
+     //std::cout << "No of records : " << *(int *)buf << std::endl;
      std::vector<LongKernel> vecLongKernels; 
      for(int i=0; i<*(int *)buf; i++)
      {
@@ -75,7 +75,7 @@ void PinfoListener::ProcessPinfo()
         mPinfos.addPinfo(temp);
      }
      //ProfileInfo pinfo((*(int *)buf), (int *)buf+sizeof(int));
-     ProfileInfo pinfo(vecLongKernels.size(), vecLongKernels);
-     pinfo.printPinfo();
+     //ProfileInfo pinfo(vecLongKernels.size(), vecLongKernels);
+     //pinfo.printPinfo();
    }
 }

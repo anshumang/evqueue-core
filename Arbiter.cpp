@@ -47,7 +47,7 @@ void Arbiter::ProcessQueue()
   while(true) //runs forever
   {
 	  boost::this_thread::sleep(epoch);
-          std::cout << "Epoch elapsed" << std::endl;
+          std::cout << "[ARBITER] ------tick------" << std::endl;
 	  //queue gets processed here
           auto tenantId = 0;
           std::vector<std::pair<unsigned long, int>> deadlinesPerTenant;
@@ -57,9 +57,9 @@ void Arbiter::ProcessQueue()
             if(mReqWindow->hasRequest(tenantId))
             {
                 RequestDescriptor *reqDesc = mReqWindow->peekRequest(tenantId);
-                std::cout << "Peeking at request(Arbiter thread) ";
-                printReqDescriptor(reqDesc);
-                std::cout << " from " << tenantId << std::endl;
+                //std::cout << "Peeking at request(Arbiter thread) ";
+                //printReqDescriptor(reqDesc);
+                //std::cout << " from " << tenantId << std::endl;
                 auto q = std::make_pair(reqDesc->timestamp, tenantId);
                 struct KernelSignature ks;
                 ks.mGridX = reqDesc->grid[0];
@@ -73,18 +73,18 @@ void Arbiter::ProcessQueue()
                 if(mPinfos.hasPinfo(ks, &duration)) //if profile info present from previous launch
                 {
                    q = std::make_pair(mNumTenants*duration, tenantId);
-                   std::cout << "Valid guess of deadline " << mNumTenants*duration << std::endl;
+                   std::cout << "[ARBITER] Pinfo deadline for " << tenantId << " at " << mNumTenants*duration << std::endl;
                 }
                 else //else num of tenents x scheduling epoch
                 {
                    q = std::make_pair(mNumTenants*mSchedulingEpoch, tenantId);
-                   std::cout << "Naive guess of deadline " << mNumTenants*duration << std::endl;
+                   std::cout << "[ARBITER] Naive deadline for " << tenantId << " at " << mNumTenants*duration << std::endl;
                 }
                 deadlinesPerTenant.push_back(q); //for now, based on order of arrival
             }
             else
             {
-                 std::cout << "No request found from " << tenantId << std::endl;
+                 std::cout << "[ARBITER] No request found from " << tenantId << std::endl;
             }
             tenantId++;
           }
@@ -95,7 +95,7 @@ void Arbiter::ProcessQueue()
           //send responses
           for (auto const& p : deadlinesPerTenant)
           {
-             std::cout << "Sending response to " << p.second << std::endl;
+             std::cout << "[ARBITER] Sending response to " << p.second << " with deadline " << p.first << std::endl;
              mReqWindow->sendResponse(p.second);
 	     boost::posix_time::milliseconds subepoch(1);
              boost::this_thread::sleep(subepoch); //Space out the responses to avoid packet reordering
