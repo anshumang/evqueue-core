@@ -36,7 +36,7 @@ struct KernelSignature
 
 struct CompareKernelSignature
 {
-  bool operator()(KernelSignature ks1, KernelSignature ks2)
+  bool operator()(struct KernelSignature ks1, struct KernelSignature ks2)
   {
      return ks1.mGridX*ks1.mGridY*ks1.mGridZ < ks2.mGridX*ks2.mGridY*ks2.mGridZ;
   }
@@ -44,8 +44,10 @@ struct CompareKernelSignature
 
 struct PinfoStore
 {
-  void addPinfo(std::pair<KernelSignature, unsigned long>);
-  std::multimap<KernelSignature, unsigned long, CompareKernelSignature> mSignatureDurationMultimap;
+  void addPinfo(std::pair<struct KernelSignature, unsigned long>);
+  bool hasPinfo(struct KernelSignature, unsigned long *);
+  void showPinfoStore();
+  std::multimap<struct KernelSignature, unsigned long, CompareKernelSignature> mSignatureDurationMultimap;
 };
 
 #endif

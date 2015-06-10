@@ -33,10 +33,14 @@ RequestWindow::RequestWindow(int numTenants)
 void RequestWindow::addRequest(int tenantId, RequestDescriptor *reqDesc)
 {
   mPerTenantRequestQueue[tenantId].push(reqDesc);
+  //RequestDescriptor *temp = mPerTenantRequestQueue[tenantId].back();
+  //std::cout << "Peeking at request (addRequest) ";
+  //printReqDescriptor(temp);
 }
 
 bool RequestWindow::hasRequest(int tenantId)
 {
+    //std::cout << "Is queue empty for tenantId " << tenantId << "returned " << mPerTenantRequestQueue[tenantId].empty() << std::endl;
     if(mPerTenantRequestQueue[tenantId].empty())
     {
        return false;
@@ -46,7 +50,7 @@ bool RequestWindow::hasRequest(int tenantId)
 
 RequestDescriptor* RequestWindow::peekRequest(int tenantId)
 {
-   return mPerTenantRequestQueue[tenantId].front();
+   return mPerTenantRequestQueue[tenantId].back();
 }
 
 void RequestWindow::addRequestor(int tenantId)

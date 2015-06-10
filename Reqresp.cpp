@@ -86,6 +86,18 @@ void Reqresp::ProcessReq()
       printReqDescriptor(reqDesc);
       std::cout << " from " << mTenantId << std::endl;
       mArb->mReqWindow->addRequest(mTenantId, reqDesc);  
+      /*auto tenantId = 0;
+      for (auto const& p : mArb->mReqWindow->mPerTenantRequestQueue)
+      {
+	  if(mArb->mReqWindow->hasRequest(tenantId))
+	  {
+	      RequestDescriptor *reqDesc = mArb->mReqWindow->peekRequest(tenantId);
+	      std::cout << "Peeking at request(Reqresp thread) ";
+              printReqDescriptor(reqDesc);
+	      std::cout << " from " << tenantId << std::endl;
+          }
+	  tenantId++;
+      }*/
       //mArb->mReqWindow->addRequestor(mTenantId);
       //the blocking in tenant is a result of delaying the receive()
       mArb->mReqWindow->waitForResponse(mTenantId);

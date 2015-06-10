@@ -27,7 +27,7 @@
 
 struct Arbiter
 {
-   Arbiter(int numTenants, PinfoStore& pinfos);
+   Arbiter(int numTenants, unsigned long schedulingEpoch, PinfoStore& pinfos);
    ~Arbiter();
    void start();
    void join();
@@ -36,6 +36,8 @@ struct Arbiter
    RequestWindow *mReqWindow;   
    friend struct Reqresp;
    PinfoStore& mPinfos;
+   int mNumTenants;
+   unsigned long mSchedulingEpoch;
 };
 
 #endif

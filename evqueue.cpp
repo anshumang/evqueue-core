@@ -295,7 +295,8 @@ int main(int argc,const char **argv)
                 PinfoListener pil("ipc:///tmp/pinfo.ipc", pinfos);
                 pil.start();
 
-                Arbiter arb(2, pinfos);
+                //2 tenants, 10 ms epoch
+                Arbiter arb(2, 10000000, pinfos);
                 arb.start();
 
                 Reqresp tenant1("ipc:///tmp/req1.ipc", "ipc:///tmp/resp1.ipc", 0, &arb);

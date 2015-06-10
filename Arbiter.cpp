@@ -19,8 +19,8 @@
 
 #include "Arbiter.h"
 
-Arbiter::Arbiter(int numTenants, PinfoStore& pinfos)
- : mPinfos(pinfos)
+Arbiter::Arbiter(int numTenants, unsigned long schedulingEpoch, PinfoStore& pinfos)
+ : mNumTenants(numTenants), mSchedulingEpoch(schedulingEpoch), mPinfos(pinfos)
 {
    mReqWindow = new RequestWindow(numTenants);
 }
@@ -57,18 +57,30 @@ void Arbiter::ProcessQueue()
             if(mReqWindow->hasRequest(tenantId))
             {
                 RequestDescriptor *reqDesc = mReqWindow->peekRequest(tenantId);
-                std::cout << "Peeking at request ";
+                std::cout << "Peeking at request(Arbiter thread) ";
                 printReqDescriptor(reqDesc);
                 std::cout << " from " << tenantId << std::endl;
                 auto q = std::make_pair(reqDesc->timestamp, tenantId);
-                KernelSignature ks;
+                struct KernelSignature ks;
                 ks.mGridX = reqDesc->grid[0];
                 ks.mGridY = reqDesc->grid[1];
                 ks.mGridZ = reqDesc->grid[2];
                 ks.mBlockX = reqDesc->block[0];
                 ks.mBlockY = reqDesc->block[1];
                 ks.mBlockZ = reqDesc->block[2];
-                deadlinesPerTenant.push_back(q); //for now, arrivalsPerTenant
+                unsigned long duration=0;
+		//std::cout << "ks(hasPinfo) : " << ks.mGridX << " " << ks.mGridY << " " << ks.mGridZ << " " << ks.mBlockX << " " << ks.mBlockY << " " << ks.mBlockZ << std::endl;
+                if(mPinfos.hasPinfo(ks, &duration)) //if profile info present from previous launch
+                {
+                   q = std::make_pair(mNumTenants*duration, tenantId);
+                   std::cout << "Valid guess of deadline " << mNumTenants*duration << std::endl;
+                }
+                else //else num of tenents x scheduling epoch
+                {
+                   q = std::make_pair(mNumTenants*mSchedulingEpoch, tenantId);
+                   std::cout << "Naive guess of deadline " << mNumTenants*duration << std::endl;
+                }
+                deadlinesPerTenant.push_back(q); //for now, based on order of arrival
             }
             else
             {
