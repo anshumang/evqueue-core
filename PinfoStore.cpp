@@ -22,36 +22,32 @@
 
 void PinfoStore::addPinfo(std::pair<struct KernelSignature, unsigned long> pinfo)
 {
-   //std::cout << "ks(update) : " << pinfo.first.mGridX << " " << pinfo.first.mGridY << " " << pinfo.first.mGridZ << " " << pinfo.first.mBlockX << " " << pinfo.first.mBlockY << " " << pinfo.first.mBlockZ << std::endl;
+   std::cout << "[PINFO] signature " << pinfo.first.mGridX << " " << pinfo.first.mGridY << " " << pinfo.first.mGridZ << " " << pinfo.first.mBlockX << " " << pinfo.first.mBlockY << " " << pinfo.first.mBlockZ << " of interval " << pinfo.second << std::endl;
    auto search = mSignatureDurationMultimap.find(pinfo.first);
    //If key not present, insert
    if(search == mSignatureDurationMultimap.end())
    {
-     //std::cout << "[Key Not Present] Adding pinfo of duration " << pinfo.second << std::endl;
-     std::cout << "[PINFO - new] update of interval " << pinfo.second << std::endl;
+     std::cout << "[PINFO - new] update of interval " << pinfo.second << " with signature " << pinfo.first.mGridX << " " << pinfo.first.mGridY << " " << pinfo.first.mGridZ << " " << pinfo.first.mBlockX << " " << pinfo.first.mBlockY << " " << pinfo.first.mBlockZ << std::endl;
      mSignatureDurationMultimap.insert(pinfo);
      return;
    }
    //If key present, insert if value is significantly different
    bool toInsert = true;
-   //std::cout << "Iterating over values with same key" << std::endl;
-   while(search != mSignatureDurationMultimap.end())
+   auto range = mSignatureDurationMultimap.equal_range(pinfo.first);
+   //while(search != mSignatureDurationMultimap.end())
+   for(auto iterator = range.first; iterator != range.second; iterator++)
    {
-     //std::cout << "duration(update, seen) " << search->second << std::endl;
-     //std::cout << "Found pinfo of duration " << search->second << " " << std::abs((long)(search->second)-(long)(pinfo.second)) << std::endl;
-     if(std::abs((long)(search->second)-(long)(pinfo.second))<10000000) //if a close enough value already present, do not insert
+     std::cout << "duration(update, seen) " << iterator->second << std::endl;
+     if(std::abs((long)(iterator->second)-(long)(pinfo.second))<5000000) //if a close enough value (<scheduling epoch/2) already present, do not insert
      {
-       //std::cout << "Not inserting this key because already present value is " << search->second << " and looking to insert value " << pinfo.second << std::endl;
        toInsert = false;
        break;
      }
-     search++;
+     //search++;
    }
-   //std::cout << "Done iterating" << std::endl;
    if(toInsert)
    {
-      std::cout << "[PINFO - different] update of interval " << pinfo.second << std::endl;
-      //std::cout << "[Key Present] Adding pinfo of duration " << pinfo.second << std::endl;
+     std::cout << "[PINFO - different] update of interval " << pinfo.second << " with signature " << pinfo.first.mGridX << " " << pinfo.first.mGridY << " " << pinfo.first.mGridZ << " " << pinfo.first.mBlockX << " " << pinfo.first.mBlockY << " " << pinfo.first.mBlockZ << std::endl;
       mSignatureDurationMultimap.insert(pinfo);
    }
 }
