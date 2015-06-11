@@ -25,22 +25,26 @@ RequestWindow::RequestWindow(int numTenants)
     for(int i=0; i<numTenants; i++)
     {
        mPerTenantReqReady.push_back(new bool());
-       //mPerTenantLock.push_back(std::unique_ptr<std::mutex>(new std::mutex));
-       //mPerTenantNotify.push_back(std::unique_ptr<std::condition_variable>(new std::condition_variable));
     }
 };
+
+void RequestWindow::lock()
+{
+   mMutex.lock();
+}
+
+void RequestWindow::unlock()
+{
+   mMutex.unlock();
+}
 
 void RequestWindow::addRequest(int tenantId, RequestDescriptor *reqDesc)
 {
   mPerTenantRequestQueue[tenantId].push(reqDesc);
-  //RequestDescriptor *temp = mPerTenantRequestQueue[tenantId].back();
-  //std::cout << "Peeking at request (addRequest) ";
-  //printReqDescriptor(temp);
 }
 
 bool RequestWindow::hasRequest(int tenantId)
 {
-    //std::cout << "Is queue empty for tenantId " << tenantId << "returned " << mPerTenantRequestQueue[tenantId].empty() << std::endl;
     if(mPerTenantRequestQueue[tenantId].empty())
     {
        return false;
@@ -51,6 +55,17 @@ bool RequestWindow::hasRequest(int tenantId)
 RequestDescriptor* RequestWindow::peekRequest(int tenantId)
 {
    return mPerTenantRequestQueue[tenantId].back();
+}
+
+RequestDescriptor* RequestWindow::consumeRequest(int tenantId)
+{
+    if(mPerTenantRequestQueue[tenantId].empty())
+    {
+       return NULL;
+    }
+    RequestDescriptor* reqDesc = mPerTenantRequestQueue[tenantId].front();
+    mPerTenantRequestQueue[tenantId].pop();
+    return reqDesc;
 }
 
 void RequestWindow::addRequestor(int tenantId)
@@ -67,6 +82,7 @@ void RequestWindow::waitForResponse(int tenantId)
 {
     std::unique_lock<std::mutex> lk(mPerTenantLock[tenantId]);
     mPerTenantNotify[tenantId].wait(lk, [this, tenantId]{return mPerTenantReqReady[tenantId];});
+    mPerTenantReqReady[tenantId] = false;
     lk.unlock();
 }
 

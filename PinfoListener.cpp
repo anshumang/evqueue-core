@@ -50,8 +50,7 @@ void PinfoListener::ProcessPinfo()
      void *buf = NULL;
      int bytes = mComm->receive(&buf);
      assert(bytes >= 0);
-     //std::cout << "Pinfo(bytes) : " << bytes << std::endl;
-     //std::cout << "No of records : " << *(int *)buf << std::endl;
+     std::cout << "[PINFOLISTENER]" << " records " << *(int *)buf << " bytes " << bytes << std::endl;
      std::vector<LongKernel> vecLongKernels; 
      for(int i=0; i<*(int *)buf; i++)
      {
@@ -71,10 +70,12 @@ void PinfoListener::ProcessPinfo()
         ks.mBlockX = longKernel.block[0]; ks.mBlockY = longKernel.block[1]; ks.mBlockZ = longKernel.block[2];
         std::pair<KernelSignature, unsigned long> temp;
         temp.first = ks;
+        std::cout << "[PINFOLISTENER] " << i << "=>" << longKernel.duration << std::endl; 
         temp.second = reinterpret_cast<unsigned long>(longKernel.duration);
+        mPinfos.lock();
         mPinfos.addPinfo(temp);
+        mPinfos.unlock();
      }
-     //ProfileInfo pinfo((*(int *)buf), (int *)buf+sizeof(int));
      //ProfileInfo pinfo(vecLongKernels.size(), vecLongKernels);
      //pinfo.printPinfo();
    }

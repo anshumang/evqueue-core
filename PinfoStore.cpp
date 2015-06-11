@@ -20,14 +20,24 @@
 #include "PinfoStore.h"
 #include <cstdlib>
 
+void PinfoStore::lock()
+{
+   mMutex.lock();
+}
+
+void PinfoStore::unlock()
+{
+   mMutex.unlock();
+}
+
 void PinfoStore::addPinfo(std::pair<struct KernelSignature, unsigned long> pinfo)
 {
-   std::cout << "[PINFO] signature " << pinfo.first.mGridX << " " << pinfo.first.mGridY << " " << pinfo.first.mGridZ << " " << pinfo.first.mBlockX << " " << pinfo.first.mBlockY << " " << pinfo.first.mBlockZ << " of interval " << pinfo.second << std::endl;
+   //std::cout << "[PINFO] signature " << pinfo.first.mGridX << " " << pinfo.first.mGridY << " " << pinfo.first.mGridZ << " " << pinfo.first.mBlockX << " " << pinfo.first.mBlockY << " " << pinfo.first.mBlockZ << " of interval " << pinfo.second << std::endl;
    auto search = mSignatureDurationMultimap.find(pinfo.first);
    //If key not present, insert
    if(search == mSignatureDurationMultimap.end())
    {
-     std::cout << "[PINFO - new] update of interval " << pinfo.second << " with signature " << pinfo.first.mGridX << " " << pinfo.first.mGridY << " " << pinfo.first.mGridZ << " " << pinfo.first.mBlockX << " " << pinfo.first.mBlockY << " " << pinfo.first.mBlockZ << std::endl;
+     //std::cout << "[PINFO - new] update of interval " << pinfo.second << " with signature " << pinfo.first.mGridX << " " << pinfo.first.mGridY << " " << pinfo.first.mGridZ << " " << pinfo.first.mBlockX << " " << pinfo.first.mBlockY << " " << pinfo.first.mBlockZ << std::endl;
      mSignatureDurationMultimap.insert(pinfo);
      return;
    }
@@ -37,7 +47,7 @@ void PinfoStore::addPinfo(std::pair<struct KernelSignature, unsigned long> pinfo
    //while(search != mSignatureDurationMultimap.end())
    for(auto iterator = range.first; iterator != range.second; iterator++)
    {
-     std::cout << "duration(update, seen) " << iterator->second << std::endl;
+     //std::cout << "duration(update, seen) " << iterator->second << std::endl;
      if(std::abs((long)(iterator->second)-(long)(pinfo.second))<5000000) //if a close enough value (<scheduling epoch/2) already present, do not insert
      {
        toInsert = false;
@@ -47,7 +57,7 @@ void PinfoStore::addPinfo(std::pair<struct KernelSignature, unsigned long> pinfo
    }
    if(toInsert)
    {
-     std::cout << "[PINFO - different] update of interval " << pinfo.second << " with signature " << pinfo.first.mGridX << " " << pinfo.first.mGridY << " " << pinfo.first.mGridZ << " " << pinfo.first.mBlockX << " " << pinfo.first.mBlockY << " " << pinfo.first.mBlockZ << std::endl;
+     //std::cout << "[PINFO - different] update of interval " << pinfo.second << " with signature " << pinfo.first.mGridX << " " << pinfo.first.mGridY << " " << pinfo.first.mGridZ << " " << pinfo.first.mBlockX << " " << pinfo.first.mBlockY << " " << pinfo.first.mBlockZ << std::endl;
       mSignatureDurationMultimap.insert(pinfo);
    }
 }
@@ -59,22 +69,23 @@ bool PinfoStore::hasPinfo(struct KernelSignature ks, unsigned long *duration)
    //showPinfoStore();
    if(search == mSignatureDurationMultimap.end())
    {
-      //std::cout << "Can't find pinfo " << std::endl;
       *duration = 0; //don't have a previous duration
       return false;
    }
    //std::cout << "Found pinfo(lookup)" << std::endl;
+   auto range = mSignatureDurationMultimap.equal_range(ks);
    unsigned long max_duration = 0;
-   while(search != mSignatureDurationMultimap.end())
+   //while(search != mSignatureDurationMultimap.end())
+   for(auto iterator = range.first; iterator != range.second; iterator++)
    {
       //std::cout << "duration(lookup,seen) " << search->second << std::endl;
-      if(search->second>max_duration)
+      if(iterator->second>max_duration)
       {
-        std::cout << "[PINFO] found interval " << search->second << std::endl;
-        max_duration = search->second;
-        *duration = search->second; //return the longest duration for this signature
+        //std::cout << "[PINFO] found interval " << search->second << std::endl;
+        max_duration = iterator->second;
+        *duration = iterator->second; //return the longest duration for this signature
       }
-      search++;
+      //search++;
    }
    return true;
 }

@@ -39,11 +39,15 @@ struct RequestWindow
   std::vector<bool> mPerTenantReqReady;
   std::array<std::mutex, 2> mPerTenantLock;
   std::array<std::condition_variable, 2> mPerTenantNotify;
+  std::mutex mMutex;
   RequestWindow(int numTenants);
+  void lock();
+  void unlock();
   //mPerTenantRequestQueue helpers
   void addRequest(int tenantId, RequestDescriptor *reqDesc);
   bool hasRequest(int tenantId);
   RequestDescriptor* peekRequest(int tenantId);
+  RequestDescriptor* consumeRequest(int tenantId);
   //mWaitingTenantId helpers
   void addRequestor(int tenantId);
   void removeRequestor(int tenantId);

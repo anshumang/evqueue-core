@@ -23,6 +23,7 @@
 #include "Messages.h"
 #include <map>
 #include <utility>
+#include <mutex>
 
 struct KernelSignature
 {
@@ -47,7 +48,10 @@ struct PinfoStore
   void addPinfo(std::pair<struct KernelSignature, unsigned long>);
   bool hasPinfo(struct KernelSignature, unsigned long *);
   void showPinfoStore();
+  void lock();
+  void unlock();
   std::multimap<struct KernelSignature, unsigned long, CompareKernelSignature> mSignatureDurationMultimap;
+  std::mutex mMutex;
 };
 
 #endif

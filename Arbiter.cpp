@@ -54,13 +54,17 @@ void Arbiter::ProcessQueue()
           
           for (auto const& p : mReqWindow->mPerTenantRequestQueue)
           {
-            if(mReqWindow->hasRequest(tenantId))
+            mReqWindow->lock();
+            RequestDescriptor *reqDesc = mReqWindow->consumeRequest(tenantId);
+            mReqWindow->unlock();
+            if(reqDesc)
+            //if(mReqWindow->hasRequest(tenantId))
             {
-                RequestDescriptor *reqDesc = mReqWindow->peekRequest(tenantId);
+                //RequestDescriptor *reqDesc = mReqWindow->peekRequest(tenantId);
                 //std::cout << "Peeking at request(Arbiter thread) ";
                 //printReqDescriptor(reqDesc);
                 //std::cout << " from " << tenantId << std::endl;
-                auto q = std::make_pair(reqDesc->timestamp, tenantId);
+                std::pair<unsigned long, int> q;
                 struct KernelSignature ks;
                 ks.mGridX = reqDesc->grid[0];
                 ks.mGridY = reqDesc->grid[1];
@@ -70,21 +74,24 @@ void Arbiter::ProcessQueue()
                 ks.mBlockZ = reqDesc->block[2];
                 unsigned long duration=0;
 		//std::cout << "ks(hasPinfo) : " << ks.mGridX << " " << ks.mGridY << " " << ks.mGridZ << " " << ks.mBlockX << " " << ks.mBlockY << " " << ks.mBlockZ << std::endl;
-                if(mPinfos.hasPinfo(ks, &duration)) //if profile info present from previous launch
+                mPinfos.lock();
+                bool found = mPinfos.hasPinfo(ks, &duration);
+                mPinfos.unlock();
+                if(found) //if profile info present from previous launch
                 {
                    q = std::make_pair(mNumTenants*duration, tenantId);
-                   std::cout << "[ARBITER] Pinfo deadline for " << tenantId << " at " << mNumTenants*duration << std::endl;
+                   std::cout << "[ARBITER] Pinfo deadline for " << tenantId << " with signature " << ks.mGridX << " " << ks.mGridY << " " << ks.mGridZ << " at " << /*mNumTenants**/duration << std::endl;
                 }
                 else //else num of tenents x scheduling epoch
                 {
                    q = std::make_pair(mNumTenants*mSchedulingEpoch, tenantId);
-                   std::cout << "[ARBITER] Naive deadline for " << tenantId << " at " << mNumTenants*duration << std::endl;
+                   std::cout << "[ARBITER] Naive deadline for " << tenantId << " with signature " << ks.mGridX << " " << ks.mGridY << " " << ks.mGridZ << " at " << mNumTenants*mSchedulingEpoch << std::endl;
                 }
                 deadlinesPerTenant.push_back(q); //for now, based on order of arrival
             }
             else
             {
-                 std::cout << "[ARBITER] No request found from " << tenantId << std::endl;
+                 //std::cout << "[ARBITER] No request found from " << tenantId << std::endl;
             }
             tenantId++;
           }

@@ -64,44 +64,17 @@ void Reqresp::ProcessReq()
       int bytes = mReqComm->receive(&buf);
       assert(bytes >= 0);
 
-      /*
-      struct timeval now;
-      gettimeofday(&now, NULL);
-      std::cout
-	      << "Tenant  : " << mTenantId << " "
-	      << now.tv_sec * 1000000 + now.tv_usec << " "
-	      << now.tv_sec * 1000000 + now.tv_usec - reqDesc->timestamp << " "
-	      << reqDesc->grid[0] << " "
-	      << reqDesc->grid[1] << " "
-	      << reqDesc->grid[2] << " "
-	      << reqDesc->block[0] << " "
-	      << reqDesc->block[1] << " "
-	      << reqDesc->block[2] << " "
-	      << bytes
-	      << std::endl;
-      */
-
       RequestDescriptor *reqDesc = (RequestDescriptor*)buf;
+      std::cout << "[REQRESP] Tenant " << mTenantId << " received request with signature " << reqDesc->grid[0] << " " << reqDesc->grid[1] << " " << reqDesc->grid[2] << " " << std::endl; 
       //std::cout << "Adding request ";
       //printReqDescriptor(reqDesc);
       //std::cout << " from " << mTenantId << std::endl;
+      mArb->mReqWindow->lock();
       mArb->mReqWindow->addRequest(mTenantId, reqDesc);  
-      /*auto tenantId = 0;
-      for (auto const& p : mArb->mReqWindow->mPerTenantRequestQueue)
-      {
-	  if(mArb->mReqWindow->hasRequest(tenantId))
-	  {
-	      RequestDescriptor *reqDesc = mArb->mReqWindow->peekRequest(tenantId);
-	      std::cout << "Peeking at request(Reqresp thread) ";
-              printReqDescriptor(reqDesc);
-	      std::cout << " from " << tenantId << std::endl;
-          }
-	  tenantId++;
-      }*/
-      //mArb->mReqWindow->addRequestor(mTenantId);
+      mArb->mReqWindow->unlock();
       //the blocking in tenant is a result of delaying the receive()
       mArb->mReqWindow->waitForResponse(mTenantId);
-      std::cout << "[REQRESP] Tenant " << mTenantId << " received response" << std::endl; 
+      std::cout << "[REQRESP] Tenant " << mTenantId << " received response for signature " << reqDesc->grid[0] << " " << reqDesc->grid[1] << " " << reqDesc->grid[2] << std::endl;
       SendResponse();
       mReqComm->freemsg(buf);
    }

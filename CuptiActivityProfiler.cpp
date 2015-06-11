@@ -142,7 +142,7 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
 	  /*Use > 10ms*/
           if(kernel_record->end - kernel_record->start > 10000000)
           {
-            std::cerr << kernel_record->start - m_start_timestamp << " " << kernel_record->name << " " << kernel_record->end - kernel_record->start << " " << kernel_record->gridX << " " << kernel_record->gridY << " " << kernel_record->gridZ << " " << kernel_record->blockX << " " << kernel_record->blockY << " " << kernel_record->blockZ << " " << std::endl;
+            std::cout << "[PINFO] " << kernel_record->start - m_start_timestamp << " " << kernel_record->name << " " << kernel_record->end - kernel_record->start << " " << kernel_record->gridX << " " << kernel_record->gridY << " " << kernel_record->gridZ << " " << kernel_record->blockX << " " << kernel_record->blockY << " " << kernel_record->blockZ << " " << std::endl;
             LongKernel use;
             use.grid[0]=kernel_record->gridX;
             use.grid[1]=kernel_record->gridY;
