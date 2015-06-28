@@ -47,7 +47,7 @@ void Arbiter::ProcessQueue()
   while(true) //runs forever
   {
 	  boost::this_thread::sleep(epoch);
-          std::cout << "[ARBITER] ------tick------" << std::endl;
+          //std::cout << "[ARBITER] ------tick------" << std::endl;
 	  //queue gets processed here
           auto tenantId = 0;
           std::vector<std::pair<unsigned long, int>> deadlinesPerTenant;
@@ -79,13 +79,15 @@ void Arbiter::ProcessQueue()
                 mPinfos.unlock();
                 if(found) //if profile info present from previous launch
                 {
-                   q = std::make_pair(mNumTenants*duration, tenantId);
-                   std::cout << "[ARBITER] Pinfo deadline for " << tenantId << " with signature " << ks.mGridX << " " << ks.mGridY << " " << ks.mGridZ << " at " << /*mNumTenants**/duration << std::endl;
+                   //std::cout << "P " << tenantId << " " << /*mNumTenants**/duration << std::endl;
+                   q = std::make_pair(/*mNumTenants**/duration, tenantId);
+                   //std::cout << "[ARBITER] Pinfo deadline for " << tenantId << " with signature " << ks.mGridX << " " << ks.mGridY << " " << ks.mGridZ << " at " << /*mNumTenants**/duration << std::endl;
                 }
                 else //else num of tenents x scheduling epoch
                 {
-                   q = std::make_pair(mNumTenants*mSchedulingEpoch, tenantId);
-                   std::cout << "[ARBITER] Naive deadline for " << tenantId << " with signature " << ks.mGridX << " " << ks.mGridY << " " << ks.mGridZ << " at " << mNumTenants*mSchedulingEpoch << std::endl;
+                   //std::cout << "P " << tenantId << " " << /*mNumTenants**/mSchedulingEpoch << std::endl;
+                   q = std::make_pair(/*mNumTenants**/mSchedulingEpoch, tenantId);
+                   //std::cout << "[ARBITER] Naive deadline for " << tenantId << " with signature " << ks.mGridX << " " << ks.mGridY << " " << ks.mGridZ << " at " << mNumTenants*mSchedulingEpoch << std::endl;
                 }
                 deadlinesPerTenant.push_back(q); //for now, based on order of arrival
             }
@@ -100,13 +102,92 @@ void Arbiter::ProcessQueue()
           std::sort(deadlinesPerTenant.begin(), deadlinesPerTenant.end());
 
           //send responses
+      #if 0
           for (auto const& p : deadlinesPerTenant)
           {
-             std::cout << "[ARBITER] Sending response to " << p.second << " with deadline " << p.first << std::endl;
+             //std::cout << "[ARBITER] Sending response to " << p.second << " with deadline " << p.first << std::endl;
              mReqWindow->sendResponse(p.second);
 	     boost::posix_time::milliseconds subepoch(1);
              boost::this_thread::sleep(subepoch); //Space out the responses to avoid packet reordering
           }
+      #endif
+          if (mPendingRequestorsSet.empty())
+          {
+              assert(mRequestorCumulatedServiceSliceMap.size() == 0);
+              if(!deadlinesPerTenant.empty())
+              {
+                 auto const &l = deadlinesPerTenant.back();
+                 mCurrServiceSlice = l.first;
+              }
+              mServicedRequestorsSet.clear();
+              if(!mBlockedRequestorCumulatedServiceSliceMap.empty())
+              {
+                   mRequestorCumulatedServiceSliceMap.insert(mBlockedRequestorCumulatedServiceSliceMap.begin(), mBlockedRequestorCumulatedServiceSliceMap.end());
+              }
+          }
+          for (auto const& p : deadlinesPerTenant)
+          {
+                 /*only service this tenant, if not in servicedRequestorsSet*/
+		  if (mServicedRequestorsSet.find(p.second) == mServicedRequestorsSet.end())
+		  {
+			  auto did_insert = mPendingRequestorsSet.insert(p.second);
+			  if (did_insert.second) /*new requestor*/
+			  {
+				  auto r = std::make_pair(p.second, p.first);
+				  mRequestorCumulatedServiceSliceMap.insert(r); 
+			  }
+			  else /*pending requestor*/
+			  {
+                                  auto const& q = mRequestorCumulatedServiceSliceMap.find(p.second);
+				  if(q != mRequestorCumulatedServiceSliceMap.end())
+				  {
+					  unsigned long updated_cumul_service_slice = (*q).second + p.first;
+                                          auto r = std::make_pair(p.second, updated_cumul_service_slice);
+					  mRequestorCumulatedServiceSliceMap.insert(r); 
+				  }
+                                  else
+                                  {
+                                    //this should not happen, any requestor present in pendingRequestorsSet should also be in the requestorCumulatedServiceSliceMap
+                                    std::cout << "requestor present in pendingRequestorsSet but not in the requestorCumulatedServiceSliceMap" << std::endl;
+                                    assert(0);
+                                  }
+			  }
+		  }
+                  else
+                  {
+			  if(mBlockedRequestorCumulatedServiceSliceMap.find(p.second) == mBlockedRequestorCumulatedServiceSliceMap.end())
+                          {
+				auto r = std::make_pair(p.second, p.first);
+                                mBlockedRequestorCumulatedServiceSliceMap.insert(r);
+                          }
+                          else
+                          {
+                                //this should not happen, the request from serviced tenant is blocked which means a second request from a serviced tenant can't arrive
+                                std::cout << "second request from a serviced tenant" << std::endl;
+                                assert(0);
+                          }
+                  }
+          }
+	  auto const& r = mRequestorCumulatedServiceSliceMap.begin();
+          if (r != mRequestorCumulatedServiceSliceMap.end())
+	  {
+                  auto const& key = (*r).first;
+                  auto const& value = (*r).second; 
+                  std::cout << " " << key << " " << value << std::endl;
+                  mReqWindow->sendResponse(key); //just service the first tenant in tenantId order 
+		  if(value >= mCurrServiceSlice) /*cumulServiceSlice higher than any pending requestor*/
+		  {
+			  mRequestorCumulatedServiceSliceMap.erase(key);
+			  mPendingRequestorsSet.erase(key);
+			  mServicedRequestorsSet.insert(key);
+		  }
+	  }
+          //else
+          //{
+                 //nothing scheduled
+                 //std::cout << "nothing scheduled" << std::endl;
+          //}
+              
 	  boost::this_thread::interruption_point(); //otherwise this thread can't be terminated
   } 
 }

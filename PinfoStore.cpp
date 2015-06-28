@@ -74,19 +74,37 @@ bool PinfoStore::hasPinfo(struct KernelSignature ks, unsigned long *duration)
    }
    //std::cout << "Found pinfo(lookup)" << std::endl;
    auto range = mSignatureDurationMultimap.equal_range(ks);
+   if(ks.mGridX == 256)
+   {
    unsigned long max_duration = 0;
-   //while(search != mSignatureDurationMultimap.end())
    for(auto iterator = range.first; iterator != range.second; iterator++)
    {
-      //std::cout << "duration(lookup,seen) " << search->second << std::endl;
-      if(iterator->second>max_duration)
+      if(iterator->second > max_duration)
       {
-        //std::cout << "[PINFO] found interval " << search->second << std::endl;
         max_duration = iterator->second;
         *duration = iterator->second; //return the longest duration for this signature
       }
-      //search++;
    }
+   }
+   else
+   {
+   unsigned long min_duration = ULONG_MAX;
+   for(auto iterator = range.first; iterator != range.second; iterator++)
+   {
+      if(min_duration == ULONG_MAX)
+      {
+           //std::cout << ks.mGridX << " " << ks.mGridY;
+      }
+      //std::cout << " " << iterator->second;
+      if(iterator->second < min_duration)
+      {
+        //std::cout << "[PINFO] found interval " << search->second << std::endl;
+        min_duration = iterator->second;
+        *duration = iterator->second; //return the shortest duration for this signature
+      }
+   }
+   }
+   //std::cout << " -  " << min_duration << std::endl;
    return true;
 }
 

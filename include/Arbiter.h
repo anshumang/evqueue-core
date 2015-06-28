@@ -38,6 +38,9 @@ struct Arbiter
    PinfoStore& mPinfos;
    int mNumTenants;
    unsigned long mSchedulingEpoch;
+   unsigned long mCurrServiceSlice;
+   std::set<int> mPendingRequestorsSet, mServicedRequestorsSet;
+   std::map<int, unsigned long> mRequestorCumulatedServiceSliceMap, mBlockedRequestorCumulatedServiceSliceMap;
 };
 
 #endif

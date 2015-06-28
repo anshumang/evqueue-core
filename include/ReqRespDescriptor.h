@@ -39,6 +39,7 @@ struct RequestDescriptor
    unsigned long grid[3];
    unsigned long block[3];
    unsigned long timestamp;
+   unsigned long have_run_for;
 };
 
 struct ResponseDescriptor

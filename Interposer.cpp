@@ -22,7 +22,7 @@
 #include <chrono>
 #include <EvqueueManager.h>
 
-/*cudaError_t*/int Interposer::launch(KernelIdentifier kid) 
+/*cudaError_t*/int Interposer::launch(KernelIdentifier kid, unsigned long have_run_for) 
 {
    //cudaError_t (*cudaLaunchHandle)(const void *);
    //cudaLaunchHandle = (cudaError_t (*)(const void *))dlsym(m_cudart, "cudaLaunch");
@@ -35,6 +35,7 @@
    reqDesc.block[0]=kid.m_block[0];
    reqDesc.block[1]=kid.m_block[1];
    reqDesc.block[2]=kid.m_block[2];
+   reqDesc.have_run_for = have_run_for;
    //reqDesc.timestamp = std::chrono::high_resolution_clock::now();
    struct timeval now;
    gettimeofday(&now, NULL);
@@ -45,13 +46,13 @@
    char nullch = '\0';
    std::memcpy(sendbuf+sizeof(RequestDescriptor)+kid.m_name.length(), &nullch, sizeof(char));
 
-   std::cout <<
+   /*std::cout <<
    reqDesc.timestamp - gEvqm->mStartSysClock << " "
    << kid.m_name.c_str() << " "
    << kid.m_grid[0] << " " << kid.m_grid[1] << " " << kid.m_grid[2] << " "
    << kid.m_block[0] << " " << kid.m_block[1] << " " << kid.m_block[2] << " "
    << sizeof(RequestDescriptor)+kid.m_name.length()+1
-   << std::endl;
+   << std::endl;*/
 
    gEvqm->mReq->send(sendbuf, sizeof(RequestDescriptor)+kid.m_name.length()+1);
    while(true)
@@ -60,9 +61,9 @@
      int bytes = gEvqm->mResp->receive(&buf);
      assert(bytes >= 0);
      ResponseDescriptor *respDesc = (ResponseDescriptor*)buf;
-     std::cout << "Received response ";
-     printRespDescriptor(respDesc);
-     std::cout << std::endl;
+     //std::cout << "Received response ";
+     //printRespDescriptor(respDesc);
+     //std::cout << std::endl;
      break;
    }
    return 0;

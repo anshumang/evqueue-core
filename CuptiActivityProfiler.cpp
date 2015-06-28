@@ -86,6 +86,7 @@ void CUPTIAPI bufferRequested(uint8_t **buffer, size_t *size, size_t *maxNumReco
 uint64_t m_start_timestamp;
 static uint64_t m_last_kernel_end, m_last_kernel_end_no_offset, m_last_api_end, m_last_memset_end, m_last_memcpy_end, m_last_overhead_end;
 static uint64_t m_last_kernel_grid[3], m_last_kernel_block[3];
+unsigned long long last_start, last_cumulated_use;
 
 int numCompletions;
 
@@ -101,6 +102,8 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
 
   ClientMessage *msg = new ClientMessage;
 
+  unsigned long long start_epoch = 0, cumulated_use = 0;
+
     do {
       status = cuptiActivityGetNextRecord(buffer, validSize, &record);
       if (status == CUPTI_SUCCESS) {
@@ -109,8 +112,20 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
         {
           numKernelRecords++;
           CUpti_ActivityKernel2 *kernel_record = (CUpti_ActivityKernel2 *) record;
+          //std::cerr << kernel_record->start << " " << kernel_record->end << " " << kernel_record->end - kernel_record->start << std::endl;
           if(m_last_kernel_end > 0)
           {
+             if (numRecords == 1)
+             {
+                 start_epoch = kernel_record->start - m_start_timestamp;
+                 if (last_start>0)
+                 {
+                    //std::cerr << "LAST END " << m_last_kernel_end - last_start << " " << start_epoch - m_last_kernel_end << " " << ((float)last_cumulated_use/(float)(m_last_kernel_end - last_start)) << std::endl;
+                    //std::cerr << "START " << start_epoch - last_start << " " << last_cumulated_use << " " << ((float)last_cumulated_use/(float)(start_epoch - last_start)) << std::endl;
+                 }
+                 last_start = start_epoch;
+             }
+
              /*Gap > 10ms*/
              if((kernel_record->start - m_start_timestamp> m_last_kernel_end)&&(kernel_record->start - m_last_kernel_end - m_start_timestamp > 10000000))
              {
@@ -139,10 +154,11 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
              m_last_kernel_end = kernel_record->end - m_start_timestamp;
              m_last_kernel_end_no_offset = kernel_record->end;
           }
+          cumulated_use += kernel_record->end - kernel_record->start;
 	  /*Use > 10ms*/
           if(kernel_record->end - kernel_record->start > 10000000)
           {
-            std::cout << "[PINFO] " << kernel_record->start - m_start_timestamp << " " << kernel_record->name << " " << kernel_record->end - kernel_record->start << " " << kernel_record->gridX << " " << kernel_record->gridY << " " << kernel_record->gridZ << " " << kernel_record->blockX << " " << kernel_record->blockY << " " << kernel_record->blockZ << " " << std::endl;
+            //std::cerr << "[PINFO] " << /*kernel_record->start - m_start_timestamp << " " << kernel_record->name << " " <<*/ kernel_record->end - kernel_record->start << " " << kernel_record->gridX << " " << kernel_record->gridY << " " << kernel_record->gridZ << " " << kernel_record->blockX << " " << kernel_record->blockY << " " << kernel_record->blockZ << " " << std::endl;
             LongKernel use;
             use.grid[0]=kernel_record->gridX;
             use.grid[1]=kernel_record->gridY;
@@ -247,6 +263,8 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
         CUPTI_CALL(status);
       }
     } while (1);
+    //std::cerr << "END " << m_last_kernel_end - start_epoch << " " << cumulated_use << " " << ((float)cumulated_use/(float)(m_last_kernel_end - start_epoch)) << std::endl;
+    last_cumulated_use = cumulated_use;
 /*
     std::cout << numCompletions << "/" << numRecords << 
     "/" << numKernelRecords << 
@@ -267,8 +285,8 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
    //LongKernel* long_kernels = &msg->m_long_kernels[0];
    //ProfileInfo pinfo(msg->m_long_kernels.size(), reinterpret_cast<void *>(long_kernels));
    ProfileInfo pinfo(msg->m_long_kernels.size(), msg->m_long_kernels);
-   pinfo.printPinfo();
-   std::cerr << numKernelRecords << "/" << msg->m_long_kernels.size() << "/" << sizeof(pinfo.mNumLongKernels)+pinfo.mNumLongKernels*sizeof(LongKernel) << std::endl;
+   //pinfo.printPinfo();
+   //std::cerr << numKernelRecords << "/" << msg->m_long_kernels.size() << "/" << sizeof(pinfo.mNumLongKernels)+pinfo.mNumLongKernels*sizeof(LongKernel) << std::endl;
    void *buf = new char[sizeof(pinfo.mNumLongKernels)+pinfo.mNumLongKernels*sizeof(LongKernel)];
    std::memcpy(buf, &(pinfo.mNumLongKernels), sizeof(pinfo.mNumLongKernels));
    std::memcpy(reinterpret_cast<char *>(buf)+sizeof(pinfo.mNumLongKernels), pinfo.mLongKernels, pinfo.mNumLongKernels*sizeof(LongKernel));

@@ -107,9 +107,9 @@ void EvqueueManager::synch(void)
   CUPTI_CALL(cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE));
 }
 
-int EvqueueManager::launch(KernelIdentifier kid)
+int EvqueueManager::launch(KernelIdentifier kid, unsigned long have_run_for)
 {
-  return mIposer->launch(kid);
+  return mIposer->launch(kid, have_run_for);
 }
 
 extern "C"
@@ -125,9 +125,9 @@ void EvqueueDestroy()
 }
 
 extern "C"
-void EvqueueLaunch(KernelIdentifier kid)
+void EvqueueLaunch(KernelIdentifier kid, unsigned long have_run_for)
 {
-    gEvqm->launch(kid);
+    gEvqm->launch(kid, have_run_for);
 }
 
 extern "C"

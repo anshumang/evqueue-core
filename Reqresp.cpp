@@ -65,7 +65,7 @@ void Reqresp::ProcessReq()
       assert(bytes >= 0);
 
       RequestDescriptor *reqDesc = (RequestDescriptor*)buf;
-      std::cout << "[REQRESP] Tenant " << mTenantId << " received request with signature " << reqDesc->grid[0] << " " << reqDesc->grid[1] << " " << reqDesc->grid[2] << " " << std::endl; 
+      //std::cout << "[REQRESP] Tenant " << mTenantId << " received request with signature " << reqDesc->grid[0] << " " << reqDesc->grid[1] << " " << reqDesc->grid[2] << " " << std::endl; 
       //std::cout << "Adding request ";
       //printReqDescriptor(reqDesc);
       //std::cout << " from " << mTenantId << std::endl;
@@ -74,7 +74,7 @@ void Reqresp::ProcessReq()
       mArb->mReqWindow->unlock();
       //the blocking in tenant is a result of delaying the receive()
       mArb->mReqWindow->waitForResponse(mTenantId);
-      std::cout << "[REQRESP] Tenant " << mTenantId << " received response for signature " << reqDesc->grid[0] << " " << reqDesc->grid[1] << " " << reqDesc->grid[2] << std::endl;
+      //std::cout << "[REQRESP] Tenant " << mTenantId << " received response for signature " << reqDesc->grid[0] << " " << reqDesc->grid[1] << " " << reqDesc->grid[2] << std::endl;
       SendResponse();
       mReqComm->freemsg(buf);
    }
