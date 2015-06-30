@@ -196,11 +196,13 @@ void Arbiter::ProcessQueue()
                          if(minTenantId < mTenantBeingServiced)
                          {
                             mTenantBeingServiced = minTenantId;
+                            mPendingRequestorsAtleastOnce[minTenantId] = true;
                          }
                    }
                    if((mTenantBeingServiced == -1)&&(minTenantId < mNumTenants))
                    {
                         mTenantBeingServiced = minTenantId;
+                        mPendingRequestorsAtleastOnce[minTenantId] = true;
                    }
                    //if(other_max_slice > mCurrServiceSlice)
                    //{
