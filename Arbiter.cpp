@@ -176,12 +176,21 @@ void Arbiter::ProcessQueue()
                    //std::cout << "[ARBITER] Naive deadline for " << tenantId << " with signature " << ks.mGridX << " " << ks.mGridY << " " << ks.mGridZ << " at " << mNumTenants*mSchedulingEpoch << std::endl;
                 }
                 deadlinesPerTenant.push_back(q); //for now, based on order of arrival
+                std::cout << q.first << "/" << q.second; 
             }
             else
             {
                  //std::cout << "[ARBITER] No request found from " << tenantId << std::endl;
             }
             tenantId++;
+          }
+          if(deadlinesPerTenant.size()>0)
+          {
+             std::cout << std::endl;
+          }
+          else
+          {
+             std::cout << "++++++++++++++++" << std::endl;
           }
 
           //scheduling policy
@@ -262,7 +271,7 @@ void Arbiter::ProcessQueue()
                    //std::cout << "Blocked requestors ";
                    for (auto const& p: mBlockedRequestorCumulatedServiceSliceMap)
                    {
-                       std::cout << p.first << " " << p.second;
+                       //std::cout << p.first << " " << p.second;
                        if(p.second > other_max_slice)
                        {
                             other_max_slice = p.second;
@@ -395,6 +404,7 @@ void Arbiter::ProcessQueue()
                                   }
 				  //std::cout << "Now servicing " << key << " " << value << std::endl;
 				  mReqWindow->sendResponse(key);
+                                  std::cout << key << std::endl;
                                   if((key>0)&&(value > mCurrServiceSlice))
                                   {
                                       std::cout << "nnf losing gpu by " << value-mCurrServiceSlice << " " << value << " " << mCurrServiceSlice << std::endl; 
@@ -448,9 +458,9 @@ void Arbiter::ProcessQueue()
 				  {
 					  if(u.first == key)
 						  continue;
-					  std::cout << u.first << " " << u.second;
+					  //std::cout << u.first << " " << u.second;
 				  }
-				  std::cout << std::endl;
+				  //std::cout << std::endl;
 			  }
 		  }
 		  else
@@ -460,6 +470,10 @@ void Arbiter::ProcessQueue()
 			  //std::cout << "tenantBeingServiced does a handoff to a next valid tenant unless nothing pending "  << std::endl;
 		  }
 	  }
+          else
+          {
+               std::cout << "----------------" << std::endl;
+          }
               
 	  boost::this_thread::interruption_point(); //otherwise this thread can't be terminated
   } 
