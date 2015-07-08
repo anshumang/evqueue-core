@@ -54,6 +54,8 @@
    << sizeof(RequestDescriptor)+kid.m_name.length()+1
    << std::endl;*/
 
+/*CUDA-7.0 test*/
+ #if 1
    gEvqm->mReq->send(sendbuf, sizeof(RequestDescriptor)+kid.m_name.length()+1);
    while(true)
    {
@@ -66,6 +68,7 @@
      //std::cout << std::endl;
      break;
    }
+#endif
    return 0;
 }
 

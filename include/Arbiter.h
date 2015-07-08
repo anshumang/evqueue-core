@@ -43,6 +43,8 @@ struct Arbiter
    std::set<int> mPendingRequestorsSet, mServicedRequestorsSet;
    std::map<int, unsigned long> mRequestorCumulatedServiceSliceMap, mBlockedRequestorCumulatedServiceSliceMap;
    std::vector<bool> mPendingRequestorsAtleastOnce;
+   std::vector<unsigned int>m_request_ctr;
+   std::array<bool, 6> mTieBreaker;
 };
 
 #endif

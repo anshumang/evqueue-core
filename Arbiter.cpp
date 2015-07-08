@@ -26,7 +26,14 @@ Arbiter::Arbiter(int numTenants, unsigned long schedulingEpoch, PinfoStore& pinf
    for (int count=0; count<numTenants; count++)
    {
       mPendingRequestorsAtleastOnce.push_back(false);
+      m_request_ctr.push_back(0);
    }
+   mTieBreaker[0] = false;
+   mTieBreaker[1] = false;
+   mTieBreaker[2] = false;
+   mTieBreaker[3] = false;
+   mTieBreaker[4] = false;
+   mTieBreaker[5] = false;
 }
 
 Arbiter::~Arbiter()
@@ -64,6 +71,7 @@ void Arbiter::ProcessQueue()
             if(reqDesc)
             //if(mReqWindow->hasRequest(tenantId))
             {
+                m_request_ctr[tenantId]++;
                 //RequestDescriptor *reqDesc = mReqWindow->peekRequest(tenantId);
                 //std::cout << "Peeking at request(Arbiter thread) ";
                 //printReqDescriptor(reqDesc);
@@ -76,16 +84,82 @@ void Arbiter::ProcessQueue()
                 ks.mBlockX = reqDesc->block[0];
                 ks.mBlockY = reqDesc->block[1];
                 ks.mBlockZ = reqDesc->block[2];
-                unsigned long duration=0;
+                unsigned long min_duration=0, max_duration=0;
 		//std::cout << "ks(hasPinfo) : " << ks.mGridX << " " << ks.mGridY << " " << ks.mGridZ << " " << ks.mBlockX << " " << ks.mBlockY << " " << ks.mBlockZ << std::endl;
                 mPinfos.lock();
-                bool found = mPinfos.hasPinfo(ks, &duration);
+                bool found = mPinfos.hasPinfo(ks, &min_duration, &max_duration);
                 mPinfos.unlock();
                 if(found) //if profile info present from previous launch
                 {
+                   //std::cout << ks.mGridX << " " << duration << " " << m_request_ctr[tenantId] << " " << m_request_ctr[tenantId]%23 << std::endl;
                    //std::cout << "P " << tenantId << " " << /*mNumTenants**/duration << std::endl;
-                   q = std::make_pair(/*mNumTenants**/duration, tenantId);
+                   if((tenantId == 0)&&(m_request_ctr[tenantId]%23==4))
+                   {
+                      mTieBreaker[0] = true;
+                      //std::cout << "4" << std::endl;
+                   }
+                   if((tenantId == 0)&&(m_request_ctr[tenantId]%23==6))
+                   {
+                      mTieBreaker[1] = true;
+                      //std::cout << "6" << std::endl;
+                   }
+                   if((tenantId == 0)&&(m_request_ctr[tenantId]%23==13))
+                   {
+                      mTieBreaker[2] = true;
+                      //std::cout << "13 " << duration << std::endl;
+                   }
+                   if((tenantId == 0)&&(m_request_ctr[tenantId]%23==14))
+                   {
+                      mTieBreaker[3] = true;
+                      //std::cout << "14" << std::endl;
+                   }
+                   if((tenantId == 0)&&(m_request_ctr[tenantId]%23==16))
+                   {
+                      mTieBreaker[4] = true;
+                      //std::cout << "16" << std::endl;
+                   }
+                   if((tenantId == 0)&&(m_request_ctr[tenantId]%23==18))
+                   {
+                      mTieBreaker[5] = true;
+                      //std::cout << "18" << std::endl;
+                   }
+                   if(mTieBreaker[0]||mTieBreaker[1]||mTieBreaker[2]||mTieBreaker[3]||mTieBreaker[4]||mTieBreaker[5])
+                   {
+                       //std::cout << "------" << std::endl;
+                   }
+                   if((tenantId == 0)&&(mTieBreaker[0]||mTieBreaker[1]||mTieBreaker[2]||mTieBreaker[3]||mTieBreaker[4]||mTieBreaker[5]))
+                   {
+                        if(mTieBreaker[2])
+                        {
+                          max_duration = 2*max_duration;
+                        }
+                        max_duration = 2*max_duration;
+                        //std::cout << "doubled" << std::endl;
+                        mTieBreaker[0] = false;
+                        mTieBreaker[1] = false;
+                        mTieBreaker[2] = false;
+                        mTieBreaker[3] = false;
+                        mTieBreaker[4] = false;
+                        mTieBreaker[5] = false;
+                        q = std::make_pair(/*mNumTenants**/max_duration, tenantId);
+                        std::cout << ks.mGridX << " " << max_duration << std::endl;
+                   }
+                   if(tenantId != 0)
+                   {
+                      if(m_request_ctr[tenantId]%52>2)
+                      {
+                      q = std::make_pair(max_duration, tenantId);
+                        std::cout << ks.mGridX << " " << max_duration << std::endl;
+                      }
+                      else
+                      {
+                      q = std::make_pair(min_duration, tenantId);
+                        std::cout << ks.mGridX << " " << min_duration << std::endl;
+                      }
+                   }
+                   //q = std::make_pair(/*mNumTenants**/duration, tenantId);
                    //std::cout << "[ARBITER] Pinfo deadline for " << tenantId << " with signature " << ks.mGridX << " " << ks.mGridY << " " << ks.mGridZ << " at " << /*mNumTenants**/duration << std::endl;
+                   //std::cout << ks.mGridX << " " << duration << std::endl;
                 }
                 else //else num of tenents x scheduling epoch
                 {
@@ -108,15 +182,15 @@ void Arbiter::ProcessQueue()
 	  {
 		  if(!deadlinesPerTenant.empty())
 		  {
-			  std::cout << "Deadlines " << deadlinesPerTenant.size() << " " << mPendingRequestorsSet.size() << " " << mServicedRequestorsSet.size() << " : ";
+			  //std::cout << "Deadlines " << deadlinesPerTenant.size() << " " << mPendingRequestorsSet.size() << " " << mServicedRequestorsSet.size() << " : ";
 		  }
 		  for (auto const& p : deadlinesPerTenant)
 		  {
-			  std::cout << p.first << " ";
+			  //std::cout << p.first << " ";
 		  }
 		  if(!deadlinesPerTenant.empty())
 		  {
-			  std::cout << endl;
+			  //std::cout << endl;
 		  }
 	  }
 
@@ -149,7 +223,7 @@ void Arbiter::ProcessQueue()
 			  }
 			  assert(minTenantId < mNumTenants); //if minTenantId still not a legal tenantId, deadlinesPerTenant is probably corrupted
 			  mTenantBeingServiced = minTenantId;
-			  std::cout  << "Picking a tenant to be serviced " << mTenantBeingServiced << std::endl;
+			  //std::cout  << "Picking a tenant to be serviced " << mTenantBeingServiced << std::endl;
 		  }
 #if 0
 		  if(!deadlinesPerTenant.empty() && mServicedRequestorsSet.empty()) /*only modify the slice until no tenant has been serviced in the current round*/
@@ -177,7 +251,7 @@ void Arbiter::ProcessQueue()
               {
                    unsigned long other_max_slice = 0;
                    int minTenantId = mNumTenants + 1;
-                   std::cout << "Blocked requestors ";
+                   //std::cout << "Blocked requestors ";
                    for (auto const& p: mBlockedRequestorCumulatedServiceSliceMap)
                    {
                        std::cout << p.first << " " << p.second;
@@ -208,7 +282,7 @@ void Arbiter::ProcessQueue()
                    //{
                       mCurrServiceSlice = other_max_slice;
                    //}
-                   std::cout << " Slice(from blocked requests) " << other_max_slice << std::endl;
+                   //std::cout << " Slice(from blocked requests) " << other_max_slice << std::endl;
                    mRequestorCumulatedServiceSliceMap.insert(mBlockedRequestorCumulatedServiceSliceMap.begin(), mBlockedRequestorCumulatedServiceSliceMap.end());
                    mBlockedRequestorCumulatedServiceSliceMap.clear();
               }
@@ -226,34 +300,34 @@ void Arbiter::ProcessQueue()
                   }
 		  //if(deadlinesPerTenant.size()>1)
 		  //{
-			  std::cout << "Slice (from new requests) " << mCurrServiceSlice << std::endl;
+			  //std::cout << "Slice (from new requests) " << mCurrServiceSlice << std::endl;
 		  //}
 	  }
-	  std::cout << " Slice(final) " << mCurrServiceSlice << std::endl;
+	  //std::cout << " Slice(final) " << mCurrServiceSlice << std::endl;
           for (auto const& p : deadlinesPerTenant)
           {
                  /*only service this tenant, if not in servicedRequestorsSet*/
 		  if (mServicedRequestorsSet.find(p.second) == mServicedRequestorsSet.end())
 		  {
-                          std::cout << "Tenant not serviced in this round ";
+                          //std::cout << "Tenant not serviced in this round ";
 			  auto did_insert = mPendingRequestorsSet.insert(p.second);
 			  if (did_insert.second) /*new requestor*/
 			  {
                                   assert(mPendingRequestorsAtleastOnce[p.second] == false);
                                   mPendingRequestorsAtleastOnce[p.second] = true;
-                                  std::cout << "New Requestor " << p.second << " " << p.first << " --- ";
+                                  //std::cout << "New Requestor " << p.second << " " << p.first << " --- ";
 				  auto r = std::make_pair(p.second, p.first);
 				  mRequestorCumulatedServiceSliceMap.insert(r); 
 			  }
 			  else /*pending requestor*/
 			  {
-                                  std::cout << "In service Requestor " << p.second << " " << p.first << " --- ";
+                                  //std::cout << "In service Requestor " << p.second << " " << p.first << " --- ";
 				  auto r = std::make_pair(p.second, p.first);
                                   auto const& q = mRequestorCumulatedServiceSliceMap.find(p.second);
 				  if(q != mRequestorCumulatedServiceSliceMap.end())
 				  {
 					  unsigned long updated_cumul_service_slice = (*q).second + p.first;
-					  std::cout << "In service Requestor (update) " << p.second << " " << (*q).second << " " << updated_cumul_service_slice << " --- ";
+					  //std::cout << "In service Requestor (update) " << p.second << " " << (*q).second << " " << updated_cumul_service_slice << " --- ";
                                           auto r = std::make_pair(p.second, updated_cumul_service_slice);
                                           mRequestorCumulatedServiceSliceMap.erase(p.second);
 					  mRequestorCumulatedServiceSliceMap.insert(r); 
@@ -268,10 +342,10 @@ void Arbiter::ProcessQueue()
 		  }
                   else
                   {
-                          std::cout << "Tenant already serviced in this round " << p.second << " "  << p.first;
+                          //std::cout << "Tenant already serviced in this round " << p.second << " "  << p.first;
 			  if(mBlockedRequestorCumulatedServiceSliceMap.find(p.second) == mBlockedRequestorCumulatedServiceSliceMap.end())
                           {
-                                std::cout << " added to blocked";
+                                //std::cout << " added to blocked";
 				auto r = std::make_pair(p.second, p.first);
                                 mBlockedRequestorCumulatedServiceSliceMap.insert(r);
                           }
@@ -282,7 +356,7 @@ void Arbiter::ProcessQueue()
                                 assert(0);
                           }
                   }
-	          std::cout << std::endl;
+	          //std::cout << std::endl;
           }
 	  //auto const& r = mRequestorCumulatedServiceSliceMap.begin();
 
@@ -311,11 +385,15 @@ void Arbiter::ProcessQueue()
                                   {
                                       mPendingRequestorsAtleastOnce[key] = false;
                                   }
-				  std::cout << "Now servicing " << key << " " << value << std::endl;
+				  //std::cout << "Now servicing " << key << " " << value << std::endl;
 				  mReqWindow->sendResponse(key);
+                                  if((key>0)&&(value > mCurrServiceSlice))
+                                  {
+                                      std::cout << "nnf losing gpu by " << value-mCurrServiceSlice << " " << value << " " << mCurrServiceSlice << std::endl; 
+                                  }
 				  if(value >= mCurrServiceSlice) /*cumulServiceSlice higher than any pending requestor*/
 				  {
-					  std::cout << "Done " << key << " with slice of " << mCurrServiceSlice << std::endl;
+					  //std::cout << "Done " << key << " with slice of " << mCurrServiceSlice << std::endl;
 					  mRequestorCumulatedServiceSliceMap.erase(key);
 					  /*Find the next tenant to be serviced*/
 					  auto const& s = mPendingRequestorsSet.upper_bound(mTenantBeingServiced);
@@ -326,20 +404,20 @@ void Arbiter::ProcessQueue()
 						  {
 							  //std::cout << "Was the only tenant active" << std::endl;
 							  mTenantBeingServiced = -1; /*set to an illegal value for error checking*/
-                                                          std::cout << "No next tenant" << std::endl;
+                                                          //std::cout << "No next tenant" << std::endl;
 						  }
 						  else
 						  {
 							  std::set<int>::iterator tprime = t;
 							  unsigned int nextTenant = *(tprime++);
-							  std::cout << "Was active " << mTenantBeingServiced << " now active " << nextTenant << std::endl;
+							  //std::cout << "Was active " << mTenantBeingServiced << " now active " << nextTenant << std::endl;
 							  mTenantBeingServiced = nextTenant;
 						  }
 					  }
 					  else
 					  {
 						  unsigned int nextTenant = *s;
-						  std::cout << "Was active " << mTenantBeingServiced << " now active " << nextTenant << std::endl;
+						  //std::cout << "Was active " << mTenantBeingServiced << " now active " << nextTenant << std::endl;
 						  mTenantBeingServiced = nextTenant;
 					  }
 					  mPendingRequestorsSet.erase(key);
@@ -348,7 +426,7 @@ void Arbiter::ProcessQueue()
 				  }
 				  else
 				  {
-					  std::cout << "Continued " << key << " with slice of " << mCurrServiceSlice << " still remaining " <<  mCurrServiceSlice - value << std::endl;
+					  //std::cout << "Continued " << key << " with slice of " << mCurrServiceSlice << " still remaining " <<  mCurrServiceSlice - value << std::endl;
 				  }
 				  mNumEpochsSilent = 0;
 			  }

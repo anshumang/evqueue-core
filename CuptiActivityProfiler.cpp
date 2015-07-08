@@ -24,9 +24,9 @@ CuptiActivityProfiler::CuptiActivityProfiler(void)
   std::cout << "CuptiActivityProfiler CTOR" << std::endl;
   size_t attrValue = 0, attrValueSize = sizeof(size_t);
   attrValue = 1024;
-  CUPTI_CALL(cuptiActivitySetAttribute(CUPTI_ACTIVITY_ATTR_DEVICE_BUFFER_SIZE, &attrValueSize, &attrValue));
+  //CUPTI_CALL(cuptiActivitySetAttribute(CUPTI_ACTIVITY_ATTR_DEVICE_BUFFER_SIZE, &attrValueSize, &attrValue));
   attrValue = 1;
-  CUPTI_CALL(cuptiActivitySetAttribute(CUPTI_ACTIVITY_ATTR_DEVICE_BUFFER_POOL_LIMIT, &attrValueSize, &attrValue));
+  //CUPTI_CALL(cuptiActivitySetAttribute(CUPTI_ACTIVITY_ATTR_DEVICE_BUFFER_POOL_LIMIT, &attrValueSize, &attrValue));
   CUPTI_CALL(cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY));
   CUPTI_CALL(cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL));
   CUPTI_CALL(cuptiActivityEnable(CUPTI_ACTIVITY_KIND_OVERHEAD));
@@ -111,8 +111,14 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
         if((record->kind == CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL)||(record->kind == CUPTI_ACTIVITY_KIND_KERNEL))
         {
           numKernelRecords++;
+#ifdef _CUDA_6_5_
           CUpti_ActivityKernel2 *kernel_record = (CUpti_ActivityKernel2 *) record;
-          //std::cerr << kernel_record->start << " " << kernel_record->end << " " << kernel_record->end - kernel_record->start << std::endl;
+#else
+          CUpti_ActivityKernel3 *kernel_record = (CUpti_ActivityKernel3 *) record;
+#endif
+          //std::cerr << kernel_record->start - m_start_timestamp << " " << kernel_record->end - m_start_timestamp << " " << kernel_record->end - kernel_record->start << std::endl;
+          //std::cerr << kernel_record->gridX << " " << kernel_record->gridY << " " << kernel_record->end - kernel_record->start << std::endl;
+          //std::cout << kernel_record->start << " " << kernel_record->end << std::endl;
           if(m_last_kernel_end > 0)
           {
              if (numRecords == 1)
@@ -158,7 +164,7 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
 	  /*Use > 10ms*/
           if(kernel_record->end - kernel_record->start > 10000000)
           {
-            //std::cerr << "[PINFO] " << /*kernel_record->start - m_start_timestamp << " " << kernel_record->name << " " <<*/ kernel_record->end - kernel_record->start << " " << kernel_record->gridX << " " << kernel_record->gridY << " " << kernel_record->gridZ << " " << kernel_record->blockX << " " << kernel_record->blockY << " " << kernel_record->blockZ << " " << std::endl;
+            //std::cerr << "[PINFO] " << /*kernel_record->start - m_start_timestamp << " " <<*/ /*kernel_record->name */kernel_record->dynamicSharedMemory << " " << kernel_record->staticSharedMemory << " " << kernel_record->localMemoryPerThread << " " << kernel_record->localMemoryTotal << " " << kernel_record->registersPerThread << " " << kernel_record->sharedMemoryConfig << " " << kernel_record->partitionedGlobalCacheExecuted << " " <<kernel_record->partitionedGlobalCacheRequested << " " << " " << kernel_record->end - kernel_record->start << " " << kernel_record->gridX << " " << kernel_record->gridY << " " << kernel_record->gridZ << " " << kernel_record->blockX << " " << kernel_record->blockY << " " << kernel_record->blockZ << " " << std::endl;
             LongKernel use;
             use.grid[0]=kernel_record->gridX;
             use.grid[1]=kernel_record->gridY;
@@ -297,6 +303,7 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
    /*string ossbuf(msg->m_stream.str());
    gEvqm->mComm->send(reinterpret_cast<const void *>(ossbuf.c_str()), msg->m_stream.tellp());
    */
+/*For CUDA-7.0 test*/
    gEvqm->mComm->send(buf, sizeof(pinfo.mNumLongKernels)+pinfo.mNumLongKernels*sizeof(LongKernel));
    //int bytes = nn_send(mSock, (void *)(ossbuf.c_str()), msg->m_stream.tellp(), 0);
    //assert(bytes >= 0);

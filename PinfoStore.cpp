@@ -62,46 +62,65 @@ void PinfoStore::addPinfo(std::pair<struct KernelSignature, unsigned long> pinfo
    }
 }
 
-bool PinfoStore::hasPinfo(struct KernelSignature ks, unsigned long *duration)
+bool PinfoStore::hasPinfo(struct KernelSignature ks, unsigned long *min_duration, unsigned long *max_duration)
 {
    //std::cout << "ks(lookup) : " << ks.mGridX << " " << ks.mGridY << " " << ks.mGridZ << " " << ks.mBlockX << " " << ks.mBlockY << " " << ks.mBlockZ << std::endl;
    auto search = mSignatureDurationMultimap.find(ks);
    //showPinfoStore();
    if(search == mSignatureDurationMultimap.end())
    {
-      *duration = 0; //don't have a previous duration
+      *min_duration = 0; //don't have a previous duration
+      *max_duration = 0; //don't have a previous duration
       return false;
    }
    //std::cout << "Found pinfo(lookup)" << std::endl;
    auto range = mSignatureDurationMultimap.equal_range(ks);
    if(ks.mGridX == 256)
    {
-   unsigned long max_duration = 0;
+   unsigned long l_min_duration = ULONG_MAX;
    for(auto iterator = range.first; iterator != range.second; iterator++)
    {
-      if(iterator->second > max_duration)
+      if(iterator->second < l_min_duration)
       {
-        max_duration = iterator->second;
-        *duration = iterator->second; //return the longest duration for this signature
+        l_min_duration = iterator->second;
+        *min_duration = iterator->second; //return the shortest duration for this signature
+      }
+   }
+   unsigned long l_max_duration = 0;
+   for(auto iterator = range.first; iterator != range.second; iterator++)
+   {
+      if(iterator->second > l_max_duration)
+      {
+        l_max_duration = iterator->second;
+        *max_duration = iterator->second; //return the longest duration for this signature
       }
    }
    }
    else
    {
-   unsigned long min_duration = ULONG_MAX;
+   unsigned long l_min_duration = ULONG_MAX;
    for(auto iterator = range.first; iterator != range.second; iterator++)
    {
-      if(min_duration == ULONG_MAX)
+      if(l_min_duration == ULONG_MAX)
       {
            //std::cout << ks.mGridX << " " << ks.mGridY;
       }
       //std::cout << " " << iterator->second;
-      if(iterator->second < min_duration)
+      if(iterator->second < l_min_duration)
       {
         //std::cout << "[PINFO] found interval " << search->second << std::endl;
-        min_duration = iterator->second;
-        *duration = iterator->second; //return the shortest duration for this signature
+        l_min_duration = iterator->second;
+        *min_duration = iterator->second; //return the shortest duration for this signature
       }
+   unsigned long l_max_duration = 0;
+   for(auto iterator = range.first; iterator != range.second; iterator++)
+   {
+      if(iterator->second > l_max_duration)
+      {
+        l_max_duration = iterator->second;
+        *max_duration = iterator->second; //return the longest duration for this signature
+      }
+   }
    }
    }
    //std::cout << " -  " << min_duration << std::endl;

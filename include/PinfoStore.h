@@ -46,7 +46,7 @@ struct CompareKernelSignature
 struct PinfoStore
 {
   void addPinfo(std::pair<struct KernelSignature, unsigned long>);
-  bool hasPinfo(struct KernelSignature, unsigned long *);
+  bool hasPinfo(struct KernelSignature, unsigned long *, unsigned long *);
   void showPinfoStore();
   void lock();
   void unlock();

@@ -50,7 +50,7 @@ void PinfoListener::ProcessPinfo()
      void *buf = NULL;
      int bytes = mComm->receive(&buf);
      assert(bytes >= 0);
-     //std::cout << "[PINFOLISTENER]" << " records " << *(int *)buf << " bytes " << bytes << std::endl;
+     std::cout << "[PINFOLISTENER]" << " records " << *(int *)buf << " bytes " << bytes << std::endl;
      std::vector<LongKernel> vecLongKernels; 
      for(int i=0; i<*(int *)buf; i++)
      {
