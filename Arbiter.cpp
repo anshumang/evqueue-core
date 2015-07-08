@@ -127,13 +127,15 @@ void Arbiter::ProcessQueue()
                    {
                        //std::cout << "------" << std::endl;
                    }
-                   if((tenantId == 0)&&(mTieBreaker[0]||mTieBreaker[1]||mTieBreaker[2]||mTieBreaker[3]||mTieBreaker[4]||mTieBreaker[5]))
+                   if(tenantId == 0)
                    {
+                     if(mTieBreaker[0]||mTieBreaker[1]||mTieBreaker[2]||mTieBreaker[3]||mTieBreaker[4]||mTieBreaker[5])
+                     {
                         if(mTieBreaker[2])
                         {
-                          max_duration = 2*max_duration;
+                          min_duration = 2*min_duration;
                         }
-                        max_duration = 2*max_duration;
+                        min_duration = 2*min_duration;
                         //std::cout << "doubled" << std::endl;
                         mTieBreaker[0] = false;
                         mTieBreaker[1] = false;
@@ -141,20 +143,26 @@ void Arbiter::ProcessQueue()
                         mTieBreaker[3] = false;
                         mTieBreaker[4] = false;
                         mTieBreaker[5] = false;
-                        q = std::make_pair(/*mNumTenants**/max_duration, tenantId);
-                        std::cout << ks.mGridX << " " << max_duration << std::endl;
+                        q = std::make_pair(/*mNumTenants**/min_duration, tenantId);
+                        std::cerr << ks.mGridX << " " << min_duration << std::endl;
+                      }
+                      else
+                      {
+                        q = std::make_pair(/*mNumTenants**/min_duration, tenantId);
+                        std::cerr << ks.mGridX << " " << min_duration << std::endl;
+                      }
                    }
                    if(tenantId != 0)
                    {
                       if(m_request_ctr[tenantId]%52>2)
                       {
                       q = std::make_pair(max_duration, tenantId);
-                        std::cout << ks.mGridX << " " << max_duration << std::endl;
+                        std::cerr << ks.mGridX << " " << max_duration << std::endl;
                       }
                       else
                       {
                       q = std::make_pair(min_duration, tenantId);
-                        std::cout << ks.mGridX << " " << min_duration << std::endl;
+                        std::cerr << ks.mGridX << " " << min_duration << std::endl;
                       }
                    }
                    //q = std::make_pair(/*mNumTenants**/duration, tenantId);
