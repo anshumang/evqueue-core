@@ -29,6 +29,7 @@
 //#include <memory> //For unique_ptr and shared_ptr
 #include <array>
 #include <algorithm>
+#include <cassert>
 #include "ReqRespDescriptor.h"
 
 struct RequestWindow
@@ -37,6 +38,7 @@ struct RequestWindow
   std::vector <std::queue <RequestDescriptor *> > mPerTenantRequestQueue;
   std::set <int> mWaitingTenantId;
   std::vector<bool> mPerTenantReqReady;
+  std::vector<long> mPerTenantServiceId;
   std::array<std::mutex, 2> mPerTenantLock;
   std::array<std::condition_variable, 2> mPerTenantNotify;
   std::mutex mMutex;
@@ -53,4 +55,6 @@ struct RequestWindow
   void removeRequestor(int tenantId);
   void waitForResponse(int tenantId);
   void sendResponse(int tenantId);
+  int getServiceId(int tenantId);
+  void setServiceId(int tenantId, long serviceId);
 };

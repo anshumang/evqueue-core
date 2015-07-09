@@ -40,12 +40,14 @@ struct RequestDescriptor
    unsigned long block[3];
    unsigned long timestamp;
    unsigned long have_run_for;
+   long service_id;
 };
 
 struct ResponseDescriptor
 {
    bool mNeedYield;
    long mRunSlice; //how long before yielding
+   long mServiceId;
 };
 
 void printReqDescriptor(RequestDescriptor * reqDesc);

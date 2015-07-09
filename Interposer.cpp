@@ -22,7 +22,7 @@
 #include <chrono>
 #include <EvqueueManager.h>
 
-/*cudaError_t*/int Interposer::launch(KernelIdentifier kid, unsigned long have_run_for) 
+/*cudaError_t*/int Interposer::launch(KernelIdentifier kid, unsigned long have_run_for, int service_id) 
 {
    //cudaError_t (*cudaLaunchHandle)(const void *);
    //cudaLaunchHandle = (cudaError_t (*)(const void *))dlsym(m_cudart, "cudaLaunch");
@@ -36,6 +36,7 @@
    reqDesc.block[1]=kid.m_block[1];
    reqDesc.block[2]=kid.m_block[2];
    reqDesc.have_run_for = have_run_for;
+   reqDesc.service_id = service_id;
    //reqDesc.timestamp = std::chrono::high_resolution_clock::now();
    struct timeval now;
    gettimeofday(&now, NULL);

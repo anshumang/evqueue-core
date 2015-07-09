@@ -90,6 +90,15 @@ void Arbiter::ProcessQueue()
                 ks.mBlockZ = reqDesc->block[2];
                 unsigned long min_duration=0, max_duration=0;
 		//std::cout << "ks(hasPinfo) : " << ks.mGridX << " " << ks.mGridY << " " << ks.mGridZ << " " << ks.mBlockX << " " << ks.mBlockY << " " << ks.mBlockZ << std::endl;
+                if(reqDesc->service_id != -1) /*In service request - was 'yield'-ed, shouldn't lookup predictor and compute remaining time, instead*/
+                {
+                    long tot_run_time = reqDesc->service_id; // Should ideally use the serviceId to lookup the stored prediction, but since the serviceId is otherwise unused on client, using it to store the same information in transit
+                    long have_run_for = reqDesc->have_run_for;
+                    assert(tot_run_time >= have_run_for);
+                    q = std::make_pair(tot_run_time - have_run_for, tenantId);
+                }
+                else /*New request, look up predictor*/
+                {
                 mPinfos.lock();
                 bool found = mPinfos.hasPinfo(ks, &min_duration, &max_duration);
                 mPinfos.unlock();
@@ -149,11 +158,13 @@ void Arbiter::ProcessQueue()
                         mTieBreaker[5] = false;
                         q = std::make_pair(/*mNumTenants**/min_duration, tenantId);
                         //std::cerr << ks.mGridX << " " << min_duration << std::endl;
+                        mReqWindow->setServiceId(min_duration, tenantId);
                       }
                       else
                       {
                         q = std::make_pair(/*mNumTenants**/min_duration, tenantId);
                         //std::cerr << ks.mGridX << " " << min_duration << std::endl;
+                        mReqWindow->setServiceId(min_duration, tenantId);
                       }
                    }
                    if(tenantId != 0)
@@ -164,14 +175,16 @@ void Arbiter::ProcessQueue()
                         {
                               max_duration = last_max_duration;
                         }
-                      q = std::make_pair(max_duration, tenantId);
+                        q = std::make_pair(max_duration, tenantId);
+                        mReqWindow->setServiceId(max_duration, tenantId);
                         last_max_duration = max_duration;
-                        std::cerr << ks.mGridX << " " << max_duration << std::endl;
+                        //std::cerr << ks.mGridX << " " << max_duration << std::endl;
                       }
                       else
                       {
-                      q = std::make_pair(min_duration, tenantId);
-                        std::cerr << ks.mGridX << " " << min_duration << std::endl;
+                        q = std::make_pair(min_duration, tenantId);
+                        mReqWindow->setServiceId(max_duration, tenantId);
+                        //std::cerr << ks.mGridX << " " << min_duration << std::endl;
                       }
                    }
                    //q = std::make_pair(/*mNumTenants**/duration, tenantId);
@@ -182,7 +195,9 @@ void Arbiter::ProcessQueue()
                 {
                    //std::cout << "P " << tenantId << " " << /*mNumTenants**/mSchedulingEpoch << std::endl;
                    q = std::make_pair(/*mNumTenants**/mSchedulingEpoch, tenantId);
+                   mReqWindow->setServiceId(mSchedulingEpoch, tenantId);
                    //std::cout << "[ARBITER] Naive deadline for " << tenantId << " with signature " << ks.mGridX << " " << ks.mGridY << " " << ks.mGridZ << " at " << mNumTenants*mSchedulingEpoch << std::endl;
+                }
                 }
                 deadlinesPerTenant.push_back(q); //for now, based on order of arrival
                 std::cout << q.first << "/" << q.second; 

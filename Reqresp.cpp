@@ -47,11 +47,12 @@ void Reqresp::join()
    mThread.join();
 }
 
-void Reqresp::SendResponse()
+void Reqresp::SendResponse(long service_id)
 {
    ResponseDescriptor respDesc;
    respDesc.mNeedYield = false;
    respDesc.mRunSlice = 10000000; //10 ms
+   respDesc.mServiceId = service_id;
    mRespComm->send(&respDesc, sizeof(ResponseDescriptor)); 
 }
 
@@ -74,8 +75,16 @@ void Reqresp::ProcessReq()
       mArb->mReqWindow->unlock();
       //the blocking in tenant is a result of delaying the receive()
       mArb->mReqWindow->waitForResponse(mTenantId);
+      long service_id = -1;
+      if(reqDesc->service_id == -1)
+      {
+        //mArb->mReqWindow->lock(); //Write and Read from index i is always going to be serialized, writes and reads from indices i and j may conflict, but we don't care
+        service_id = mArb->mReqWindow->getServiceId(mTenantId);
+        //mArb->mReqWindow->unlock();
+        assert(service_id != -1);
+      }
       //std::cout << "[REQRESP] Tenant " << mTenantId << " received response for signature " << reqDesc->grid[0] << " " << reqDesc->grid[1] << " " << reqDesc->grid[2] << std::endl;
-      SendResponse();
+      SendResponse(service_id);
       mReqComm->freemsg(buf);
    }
 }

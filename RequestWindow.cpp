@@ -25,6 +25,7 @@ RequestWindow::RequestWindow(int numTenants)
     for(int i=0; i<numTenants; i++)
     {
        mPerTenantReqReady.push_back(new bool());
+       mPerTenantServiceId.push_back(-1);
     }
 };
 
@@ -91,4 +92,17 @@ void RequestWindow::sendResponse(int tenantId)
     std::lock_guard<std::mutex> lk(mPerTenantLock[tenantId]);
     mPerTenantReqReady[tenantId] = true;
     mPerTenantNotify[tenantId].notify_one();
+}
+
+int RequestWindow::getServiceId(int tenantId)
+{
+    long to_be_returned = mPerTenantServiceId[tenantId];
+    mPerTenantServiceId[tenantId] = -1;
+    return to_be_returned;
+}
+
+void RequestWindow::setServiceId(int tenantId, long serviceId)
+{
+    assert(mPerTenantServiceId[tenantId] == -1);
+    mPerTenantServiceId[tenantId] = serviceId;
 }

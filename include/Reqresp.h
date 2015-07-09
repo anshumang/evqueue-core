@@ -33,7 +33,7 @@ struct Reqresp
    void start();
    void join();
    void ProcessReq();
-   void SendResponse();
+   void SendResponse(long service_id);
    boost::thread mThread;
    int mTenantId;
    Communicator *mReqComm, *mRespComm;
