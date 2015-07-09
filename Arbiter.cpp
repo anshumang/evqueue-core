@@ -55,6 +55,7 @@ void Arbiter::join()
 void Arbiter::ProcessQueue()
 {
   boost::posix_time::milliseconds epoch(10);
+  unsigned long last_max_duration = 0;
   while(true) //runs forever
   {
 	  boost::this_thread::sleep(epoch);
@@ -144,19 +145,24 @@ void Arbiter::ProcessQueue()
                         mTieBreaker[4] = false;
                         mTieBreaker[5] = false;
                         q = std::make_pair(/*mNumTenants**/min_duration, tenantId);
-                        std::cerr << ks.mGridX << " " << min_duration << std::endl;
+                        //std::cerr << ks.mGridX << " " << min_duration << std::endl;
                       }
                       else
                       {
                         q = std::make_pair(/*mNumTenants**/min_duration, tenantId);
-                        std::cerr << ks.mGridX << " " << min_duration << std::endl;
+                        //std::cerr << ks.mGridX << " " << min_duration << std::endl;
                       }
                    }
                    if(tenantId != 0)
                    {
                       if(m_request_ctr[tenantId]%52>2)
                       {
+                        if((last_max_duration!=0) && (max_duration - last_max_duration > 20000000))
+                        {
+                              max_duration = last_max_duration;
+                        }
                       q = std::make_pair(max_duration, tenantId);
+                        last_max_duration = max_duration;
                         std::cerr << ks.mGridX << " " << max_duration << std::endl;
                       }
                       else
@@ -226,6 +232,7 @@ void Arbiter::ProcessQueue()
 	  if (mPendingRequestorsSet.empty())
 	  {
 		  assert(mRequestorCumulatedServiceSliceMap.size() == 0);
+		  assert(mRequestorCurrentAllottedServiceSliceMap.size() == 0);
 		  /*pick a new tenant if there are new requests and nothing is pending*/
 		  if(!deadlinesPerTenant.empty())
 		  {
@@ -301,6 +308,7 @@ void Arbiter::ProcessQueue()
                    //}
                    //std::cout << " Slice(from blocked requests) " << other_max_slice << std::endl;
                    mRequestorCumulatedServiceSliceMap.insert(mBlockedRequestorCumulatedServiceSliceMap.begin(), mBlockedRequestorCumulatedServiceSliceMap.end());
+                   mRequestorCurrentAllottedServiceSliceMap.insert(mBlockedRequestorCumulatedServiceSliceMap.begin(), mBlockedRequestorCumulatedServiceSliceMap.end());
                    mBlockedRequestorCumulatedServiceSliceMap.clear();
               }
               else
@@ -335,19 +343,26 @@ void Arbiter::ProcessQueue()
                                   //std::cout << "New Requestor " << p.second << " " << p.first << " --- ";
 				  auto r = std::make_pair(p.second, p.first);
 				  mRequestorCumulatedServiceSliceMap.insert(r); 
+                                  auto rr = std::make_pair(p.second, p.first);
+                                  mRequestorCurrentAllottedServiceSliceMap.insert(rr);
 			  }
 			  else /*pending requestor*/
 			  {
                                   //std::cout << "In service Requestor " << p.second << " " << p.first << " --- ";
 				  auto r = std::make_pair(p.second, p.first);
                                   auto const& q = mRequestorCumulatedServiceSliceMap.find(p.second);
+                                  auto const& qq = mRequestorCurrentAllottedServiceSliceMap.find(p.second);
 				  if(q != mRequestorCumulatedServiceSliceMap.end())
 				  {
+                                          assert(qq != mRequestorCurrentAllottedServiceSliceMap.end());
 					  unsigned long updated_cumul_service_slice = (*q).second + p.first;
 					  //std::cout << "In service Requestor (update) " << p.second << " " << (*q).second << " " << updated_cumul_service_slice << " --- ";
                                           auto r = std::make_pair(p.second, updated_cumul_service_slice);
                                           mRequestorCumulatedServiceSliceMap.erase(p.second);
 					  mRequestorCumulatedServiceSliceMap.insert(r); 
+                                          auto rr = std::make_pair(p.second, p.first);
+                                          mRequestorCurrentAllottedServiceSliceMap.erase(p.second);
+                                          mRequestorCurrentAllottedServiceSliceMap.insert(rr);
 				  }
                                   else
                                   {
@@ -381,10 +396,13 @@ void Arbiter::ProcessQueue()
 	  {
 		  assert(mTenantBeingServiced != -1);
 		  auto const& r = mRequestorCumulatedServiceSliceMap.find(mTenantBeingServiced);
+		  auto const& rr = mRequestorCurrentAllottedServiceSliceMap.find(mTenantBeingServiced);
 		  if (r != mRequestorCumulatedServiceSliceMap.end())
 		  {
+                          assert(rr != mRequestorCurrentAllottedServiceSliceMap.end());
 			  auto const& key = (*r).first;
 			  auto const& value = (*r).second; 
+                          auto const& valuevalue = (*rr).second;
 			  //if mTenantBeingServiced not in deadlinesPerTenant and mPendingRequestorsSet.size() > 1, missed scheduling opportunity
 			  bool tenantBeingServicedHasRequest = false;
 			  for(auto const& p : deadlinesPerTenant)
@@ -405,14 +423,22 @@ void Arbiter::ProcessQueue()
 				  //std::cout << "Now servicing " << key << " " << value << std::endl;
 				  mReqWindow->sendResponse(key);
                                   std::cout << key << std::endl;
-                                  if((key>0)&&(value > mCurrServiceSlice))
+                                  if(value > mCurrServiceSlice)
                                   {
+                                      if(key > 0)
+                                      {
                                       std::cout << "nnf losing gpu by " << value-mCurrServiceSlice << " " << value << " " << mCurrServiceSlice << std::endl; 
+                                      }
+                                      else
+                                      {
+                                      std::cout << "pr losing gpu by " << value-mCurrServiceSlice << " " << value << " " << mCurrServiceSlice << std::endl; 
+                                      }
                                   }
 				  if(value >= mCurrServiceSlice) /*cumulServiceSlice higher than any pending requestor*/
 				  {
 					  //std::cout << "Done " << key << " with slice of " << mCurrServiceSlice << std::endl;
 					  mRequestorCumulatedServiceSliceMap.erase(key);
+					  mRequestorCurrentAllottedServiceSliceMap.erase(key);
 					  /*Find the next tenant to be serviced*/
 					  auto const& s = mPendingRequestorsSet.upper_bound(mTenantBeingServiced);
 					  if(s == mPendingRequestorsSet.end())
@@ -453,14 +479,58 @@ void Arbiter::ProcessQueue()
 				  //can't wait forever to ensure fairness, not a lot more than the last requested duration accumulated (we don't store this separately, only the cumulative sum in mRequestorCumulatedServiceSliceMap), probably the upper bound is the cumulative sum - epoch if all requests came in a burst (-epoch is atleast the time it got since it was scheduled)
 				  //let's count how many epochs we wait for the next request from this tenant
 				  mNumEpochsSilent++;
-				  std::cout << "Silent for " << key << " with accumulated " << value << " and this is the " << mNumEpochsSilent << "th allowance when others waiting are ";
+                                  if(mPendingRequestorsSet.size() > 1) /*have other waiting tenants*/
+                                  {
+                                  if(mSchedulingEpoch * mNumEpochsSilent >= valuevalue)
+                                  {
+                                       std::cout << "Done waiting " << valuevalue << std::endl;
+					  mRequestorCumulatedServiceSliceMap.erase(key);
+					  mRequestorCurrentAllottedServiceSliceMap.erase(key);
+					  /*Find the next tenant to be serviced*/
+					  auto const& s = mPendingRequestorsSet.upper_bound(mTenantBeingServiced);
+					  if(s == mPendingRequestorsSet.end())
+					  {
+						  auto const& t = mPendingRequestorsSet.lower_bound(mTenantBeingServiced);
+						  if(t == mPendingRequestorsSet.begin())
+						  {
+							  //std::cout << "Was the only tenant active" << std::endl;
+							  mTenantBeingServiced = -1; /*set to an illegal value for error checking*/
+                                                          //std::cout << "No next tenant" << std::endl;
+						  }
+						  else
+						  {
+							  std::set<int>::iterator tprime = t;
+							  unsigned int nextTenant = *(tprime++);
+							  //std::cout << "Was active " << mTenantBeingServiced << " now active " << nextTenant << std::endl;
+							  mTenantBeingServiced = nextTenant;
+						  }
+					  }
+					  else
+					  {
+						  unsigned int nextTenant = *s;
+						  //std::cout << "Was active " << mTenantBeingServiced << " now active " << nextTenant << std::endl;
+						  mTenantBeingServiced = nextTenant;
+					  }
+					  mPendingRequestorsSet.erase(key);
+					  mServicedRequestorsSet.insert(key);
+                                  }
+                                  else
+                                  {
+				  //std::cout << "Silent for " << key << " with accumulated " << value << " and this is the " << mNumEpochsSilent << "th allowance when others waiting are ";
+                                  std::cout << "Waiting but don't want to " << key << " " << value << " " << mNumEpochsSilent << "/" << " ";
 				  for(auto const& u : mRequestorCumulatedServiceSliceMap)
 				  {
 					  if(u.first == key)
 						  continue;
-					  //std::cout << u.first << " " << u.second;
+					  std::cout << u.first << " " << u.second;
 				  }
-				  //std::cout << std::endl;
+				  std::cout << std::endl;
+                                  }
+                                  }
+                                  else
+                                  {
+                                      std::cout << "Waiting but don't care " << key << " " << value << " " << mNumEpochsSilent << std::endl;
+                                  }
 			  }
 		  }
 		  else

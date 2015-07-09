@@ -41,7 +41,7 @@ struct Arbiter
    unsigned long mCurrServiceSlice;
    int mTenantBeingServiced, mNumEpochsSilent;
    std::set<int> mPendingRequestorsSet, mServicedRequestorsSet;
-   std::map<int, unsigned long> mRequestorCumulatedServiceSliceMap, mBlockedRequestorCumulatedServiceSliceMap;
+   std::map<int, unsigned long> mRequestorCumulatedServiceSliceMap, mBlockedRequestorCumulatedServiceSliceMap, mRequestorCurrentAllottedServiceSliceMap;
    std::vector<bool> mPendingRequestorsAtleastOnce;
    std::vector<unsigned int>m_request_ctr;
    std::array<bool, 6> mTieBreaker;
