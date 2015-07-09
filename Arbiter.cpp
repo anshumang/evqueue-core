@@ -55,11 +55,14 @@ void Arbiter::join()
 void Arbiter::ProcessQueue()
 {
   boost::posix_time::milliseconds epoch(10);
-  unsigned long last_max_duration = 0;
+  unsigned long last_max_duration = 0, last_service_slice = 0;
+  int last_pending_requestor_serviced=-1, last_pending_requestors_cnt=-1, epochs_since_last_response=0, num_epochs_standalone=0;
   while(true) //runs forever
   {
 	  boost::this_thread::sleep(epoch);
           //std::cout << "[ARBITER] ------tick------" << std::endl;
+          epochs_since_last_response++;
+	  last_pending_requestors_cnt = mPendingRequestorsSet.size();
 	  //queue gets processed here
           auto tenantId = 0;
           std::vector<std::pair<unsigned long, int>> deadlinesPerTenant;
@@ -394,11 +397,37 @@ void Arbiter::ProcessQueue()
 
 	  if(!mPendingRequestorsSet.empty())
 	  {
+                  if((mPendingRequestorsSet.size()==1)&&(mTenantBeingServiced>0)) /*pr is the only tenant*/
+                  {
+                       std::cout << "pr only tenant for " << ++num_epochs_standalone << std::endl;
+                  }
+                  if(mPendingRequestorsSet.size()==2)
+                  {
+                        num_epochs_standalone=0;
+                        std::cout << "pr only tenant for " << last_service_slice << " " << epochs_since_last_response << " " << mSchedulingEpoch << " " << last_pending_requestor_serviced  << " " << last_pending_requestors_cnt << std::endl;
+                  }
 		  assert(mTenantBeingServiced != -1);
 		  auto const& r = mRequestorCumulatedServiceSliceMap.find(mTenantBeingServiced);
 		  auto const& rr = mRequestorCurrentAllottedServiceSliceMap.find(mTenantBeingServiced);
 		  if (r != mRequestorCumulatedServiceSliceMap.end())
 		  {
+                          if((mPendingRequestorsSet.size()>1)&&(last_pending_requestors_cnt==1))
+                          {
+                             if(last_pending_requestor_serviced>0)
+                             {
+                             if(last_service_slice > epochs_since_last_response*mSchedulingEpoch)
+                             {
+                             std::cout << "nnf coming in short by  " << last_service_slice-(epochs_since_last_response*mSchedulingEpoch) << " " << last_service_slice << " " << epochs_since_last_response*mSchedulingEpoch << std::endl;
+                             }
+                             }
+                             else
+                             {
+                             if(last_service_slice > epochs_since_last_response*mSchedulingEpoch)
+                             {
+                             std::cout << "pr coming in short by  " << last_service_slice-(epochs_since_last_response*mSchedulingEpoch) << " " << last_service_slice << " " << epochs_since_last_response*mSchedulingEpoch << std::endl;
+                             }
+                             }
+                          }
                           assert(rr != mRequestorCurrentAllottedServiceSliceMap.end());
 			  auto const& key = (*r).first;
 			  auto const& value = (*r).second; 
@@ -416,22 +445,33 @@ void Arbiter::ProcessQueue()
 			  }
 			  if(tenantBeingServicedHasRequest || mPendingRequestorsAtleastOnce[key])
 			  {
+                                  if(mPendingRequestorsSet.size()>1)
+                                  {
+                                    std::cout << "[RESPONSE Y double] " << key << " 0 " << mRequestorCumulatedServiceSliceMap[0] << " " << mRequestorCurrentAllottedServiceSliceMap[0] << " 1 " << mRequestorCumulatedServiceSliceMap[1] << " " << mRequestorCurrentAllottedServiceSliceMap[1] << " " << mCurrServiceSlice << std::endl; 
+                                  }
+                                  else
+                                  {
+                                      std::cout << "[RESPONSE Y single] " << key << " " << valuevalue << " " << value << " " <<  mCurrServiceSlice << std::endl;
+                                  }
                                   if(mPendingRequestorsAtleastOnce[key])
                                   {
                                       mPendingRequestorsAtleastOnce[key] = false;
                                   }
 				  //std::cout << "Now servicing " << key << " " << value << std::endl;
 				  mReqWindow->sendResponse(key);
-                                  std::cout << key << std::endl;
-                                  if(value > mCurrServiceSlice)
+                                  last_pending_requestor_serviced=key;
+                                  last_service_slice = valuevalue;
+                                  epochs_since_last_response = 0;
+                                  //std::cout << key << std::endl;
+                                  if((value > mCurrServiceSlice)&&(mPendingRequestorsSet.size() > 1))
                                   {
                                       if(key > 0)
                                       {
-                                      std::cout << "nnf losing gpu by " << value-mCurrServiceSlice << " " << value << " " << mCurrServiceSlice << std::endl; 
+                                      std::cout << "nnf going out short by " << value-mCurrServiceSlice << " " << value << " " << mCurrServiceSlice << std::endl; 
                                       }
                                       else
                                       {
-                                      std::cout << "pr losing gpu by " << value-mCurrServiceSlice << " " << value << " " << mCurrServiceSlice << std::endl; 
+                                      std::cout << "pr going out short by " << value-mCurrServiceSlice << " " << value << " " << mCurrServiceSlice << std::endl; 
                                       }
                                   }
 				  if(value >= mCurrServiceSlice) /*cumulServiceSlice higher than any pending requestor*/
@@ -476,6 +516,14 @@ void Arbiter::ProcessQueue()
 			  }
 			  else
 			  {
+                                  if(mPendingRequestorsSet.size()>1)
+                                  {
+                                    std::cout << "[RESPONSE N double] 0 " << mRequestorCumulatedServiceSliceMap[0] << " " << mRequestorCurrentAllottedServiceSliceMap[0] << " 1 " << mRequestorCumulatedServiceSliceMap[1] << " " << mRequestorCurrentAllottedServiceSliceMap[1] << mCurrServiceSlice << std::endl; 
+                                  }
+                                  else
+                                  {
+                                      std::cout << "[RESPONSE N single] " << key << " " << valuevalue << " " << value << " " <<  mCurrServiceSlice << std::endl;
+                                  }
 				  //can't wait forever to ensure fairness, not a lot more than the last requested duration accumulated (we don't store this separately, only the cumulative sum in mRequestorCumulatedServiceSliceMap), probably the upper bound is the cumulative sum - epoch if all requests came in a burst (-epoch is atleast the time it got since it was scheduled)
 				  //let's count how many epochs we wait for the next request from this tenant
 				  mNumEpochsSilent++;
@@ -542,7 +590,7 @@ void Arbiter::ProcessQueue()
 	  }
           else
           {
-               std::cout << "----------------" << std::endl;
+               std::cout << "RESPONSE NA" << std::endl;
           }
               
 	  boost::this_thread::interruption_point(); //otherwise this thread can't be terminated
