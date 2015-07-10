@@ -27,6 +27,7 @@ RequestWindow::RequestWindow(int numTenants)
        mPerTenantReqReady.push_back(new bool());
        mPerTenantServiceId.push_back(-1);
     }
+    std::cout << "Size of service id vector " << mPerTenantServiceId.size() << std::endl;
 };
 
 void RequestWindow::lock()
@@ -101,7 +102,7 @@ int RequestWindow::getServiceId(int tenantId)
     return to_be_returned;
 }
 
-void RequestWindow::setServiceId(int tenantId, long serviceId)
+void RequestWindow::setServiceId(int serviceId, long tenantId)
 {
     assert(mPerTenantServiceId[tenantId] == -1);
     mPerTenantServiceId[tenantId] = serviceId;

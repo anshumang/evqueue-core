@@ -44,7 +44,7 @@ extern EvqueueManager *gEvqm;
 
 extern "C" void EvqueueCreate(int tenantId);
 extern "C" void EvqueueDestroy();
-extern "C" void EvqueueLaunch(KernelIdentifier k, unsigned long have_run_for, long service_id);
+extern "C" long EvqueueLaunch(KernelIdentifier k, unsigned long have_run_for, long service_id);
 extern "C" void EvqueueSynch();
 
 #endif

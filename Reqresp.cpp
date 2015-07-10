@@ -80,6 +80,7 @@ void Reqresp::ProcessReq()
       {
         //mArb->mReqWindow->lock(); //Write and Read from index i is always going to be serialized, writes and reads from indices i and j may conflict, but we don't care
         service_id = mArb->mReqWindow->getServiceId(mTenantId);
+        std::cout << "[REQRESP] " << reqDesc->grid[0] << " " << service_id << std::endl;
         //mArb->mReqWindow->unlock();
         assert(service_id != -1);
       }

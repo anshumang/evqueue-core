@@ -22,7 +22,7 @@
 #include <chrono>
 #include <EvqueueManager.h>
 
-/*cudaError_t*/int Interposer::launch(KernelIdentifier kid, unsigned long have_run_for, int service_id) 
+/*cudaError_t*/long Interposer::launch(KernelIdentifier kid, unsigned long have_run_for, int service_id) 
 {
    //cudaError_t (*cudaLaunchHandle)(const void *);
    //cudaLaunchHandle = (cudaError_t (*)(const void *))dlsym(m_cudart, "cudaLaunch");
@@ -58,19 +58,23 @@
 /*CUDA-7.0 test*/
  #if 1
    gEvqm->mReq->send(sendbuf, sizeof(RequestDescriptor)+kid.m_name.length()+1);
+   ResponseDescriptor *respDesc = NULL;
    while(true)
    {
      void *buf = NULL;
      int bytes = gEvqm->mResp->receive(&buf);
      assert(bytes >= 0);
-     ResponseDescriptor *respDesc = (ResponseDescriptor*)buf;
+     respDesc = (ResponseDescriptor*)buf;
      //std::cout << "Received response ";
      //printRespDescriptor(respDesc);
      //std::cout << std::endl;
      break;
    }
 #endif
-   return 0;
+   assert(respDesc != NULL);
+   //std::cout << "[INTERPOSER] " << respDesc->mNeedYield << " " << respDesc->mRunSlice << " " << respDesc->mServiceId << std::endl;
+   return respDesc->mServiceId;
+   //return 0;
 }
 
 Interposer::Interposer()

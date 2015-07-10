@@ -125,9 +125,9 @@ void EvqueueDestroy()
 }
 
 extern "C"
-void EvqueueLaunch(KernelIdentifier kid, unsigned long have_run_for, long service_id)
+long EvqueueLaunch(KernelIdentifier kid, unsigned long have_run_for, long service_id)
 {
-    gEvqm->launch(kid, have_run_for, service_id);
+    return gEvqm->launch(kid, have_run_for, service_id);
 }
 
 extern "C"

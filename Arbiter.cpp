@@ -94,6 +94,7 @@ void Arbiter::ProcessQueue()
                 {
                     long tot_run_time = reqDesc->service_id; // Should ideally use the serviceId to lookup the stored prediction, but since the serviceId is otherwise unused on client, using it to store the same information in transit
                     long have_run_for = reqDesc->have_run_for;
+                    std::cout << "tot_run_time >= have_run_for " << tot_run_time << " " << have_run_for << std::endl;
                     assert(tot_run_time >= have_run_for);
                     q = std::make_pair(tot_run_time - have_run_for, tenantId);
                 }
@@ -157,13 +158,13 @@ void Arbiter::ProcessQueue()
                         mTieBreaker[4] = false;
                         mTieBreaker[5] = false;
                         q = std::make_pair(/*mNumTenants**/min_duration, tenantId);
-                        //std::cerr << ks.mGridX << " " << min_duration << std::endl;
+                        //std::cerr << tenantId << " " << ks.mGridX << " " << min_duration << std::endl;
                         mReqWindow->setServiceId(min_duration, tenantId);
                       }
                       else
                       {
                         q = std::make_pair(/*mNumTenants**/min_duration, tenantId);
-                        //std::cerr << ks.mGridX << " " << min_duration << std::endl;
+                        //std::cerr << tenantId << " " << ks.mGridX << " " << min_duration << std::endl;
                         mReqWindow->setServiceId(min_duration, tenantId);
                       }
                    }
@@ -176,15 +177,15 @@ void Arbiter::ProcessQueue()
                               max_duration = last_max_duration;
                         }
                         q = std::make_pair(max_duration, tenantId);
+                        std::cerr << tenantId << " " << ks.mGridX << " " << max_duration << std::endl;
                         mReqWindow->setServiceId(max_duration, tenantId);
                         last_max_duration = max_duration;
-                        //std::cerr << ks.mGridX << " " << max_duration << std::endl;
                       }
                       else
                       {
                         q = std::make_pair(min_duration, tenantId);
+                        std::cerr << tenantId << " " << ks.mGridX << " " << min_duration << std::endl;
                         mReqWindow->setServiceId(max_duration, tenantId);
-                        //std::cerr << ks.mGridX << " " << min_duration << std::endl;
                       }
                    }
                    //q = std::make_pair(/*mNumTenants**/duration, tenantId);
@@ -195,12 +196,13 @@ void Arbiter::ProcessQueue()
                 {
                    //std::cout << "P " << tenantId << " " << /*mNumTenants**/mSchedulingEpoch << std::endl;
                    q = std::make_pair(/*mNumTenants**/mSchedulingEpoch, tenantId);
+                   //std::cerr << tenantId << " " << ks.mGridX << " " << mSchedulingEpoch << std::endl;
                    mReqWindow->setServiceId(mSchedulingEpoch, tenantId);
                    //std::cout << "[ARBITER] Naive deadline for " << tenantId << " with signature " << ks.mGridX << " " << ks.mGridY << " " << ks.mGridZ << " at " << mNumTenants*mSchedulingEpoch << std::endl;
                 }
                 }
                 deadlinesPerTenant.push_back(q); //for now, based on order of arrival
-                std::cout << q.first << "/" << q.second; 
+                //std::cout << q.first << "/" << q.second; 
             }
             else
             {
@@ -214,7 +216,7 @@ void Arbiter::ProcessQueue()
           }
           else
           {
-             std::cout << "++++++++++++++++" << std::endl;
+             //std::cout << "RESPONSE NA" << std::endl;
           }
 
           //scheduling policy
@@ -414,7 +416,7 @@ void Arbiter::ProcessQueue()
 	  {
                   if((mPendingRequestorsSet.size()==1)&&(mTenantBeingServiced>0)) /*pr is the only tenant*/
                   {
-                       std::cout << "pr only tenant for " << ++num_epochs_standalone << std::endl;
+                       //std::cout << "pr only tenant for " << ++num_epochs_standalone << std::endl;
                   }
                   if(mPendingRequestorsSet.size()==2)
                   {
@@ -466,7 +468,7 @@ void Arbiter::ProcessQueue()
                                   }
                                   else
                                   {
-                                      std::cout << "[RESPONSE Y single] " << key << " " << valuevalue << " " << value << " " <<  mCurrServiceSlice << std::endl;
+                                      //std::cout << "[RESPONSE Y single] " << key << " " << valuevalue << " " << value << " " <<  mCurrServiceSlice << std::endl;
                                   }
                                   if(mPendingRequestorsAtleastOnce[key])
                                   {
@@ -605,7 +607,7 @@ void Arbiter::ProcessQueue()
 	  }
           else
           {
-               std::cout << "RESPONSE NA" << std::endl;
+               //std::cout << "RESPONSE NA" << std::endl;
           }
               
 	  boost::this_thread::interruption_point(); //otherwise this thread can't be terminated
