@@ -60,7 +60,6 @@ void Arbiter::ProcessQueue()
   while(true) //runs forever
   {
 	  boost::this_thread::sleep(epoch);
-          //std::cout << "[ARBITER] ------tick------" << std::endl;
           epochs_since_last_response++;
 	  last_pending_requestors_cnt = mPendingRequestorsSet.size();
 	  //queue gets processed here
@@ -73,13 +72,7 @@ void Arbiter::ProcessQueue()
             RequestDescriptor *reqDesc = mReqWindow->consumeRequest(tenantId);
             mReqWindow->unlock();
             if(reqDesc)
-            //if(mReqWindow->hasRequest(tenantId))
             {
-                m_request_ctr[tenantId]++;
-                //RequestDescriptor *reqDesc = mReqWindow->peekRequest(tenantId);
-                //std::cout << "Peeking at request(Arbiter thread) ";
-                //printReqDescriptor(reqDesc);
-                //std::cout << " from " << tenantId << std::endl;
                 std::pair<unsigned long, int> q;
                 struct KernelSignature ks;
                 ks.mGridX = reqDesc->grid[0];
@@ -89,120 +82,119 @@ void Arbiter::ProcessQueue()
                 ks.mBlockY = reqDesc->block[1];
                 ks.mBlockZ = reqDesc->block[2];
                 unsigned long min_duration=0, max_duration=0;
-		//std::cout << "ks(hasPinfo) : " << ks.mGridX << " " << ks.mGridY << " " << ks.mGridZ << " " << ks.mBlockX << " " << ks.mBlockY << " " << ks.mBlockZ << std::endl;
-                if(reqDesc->service_id != -1) /*In service request - was 'yield'-ed, shouldn't lookup predictor and compute remaining time, instead*/
+                if((reqDesc->service_id != -1)&&(reqDesc->have_run_for > 0)) /*In service request - was 'yield'-ed, shouldn't lookup predictor and compute remaining time, instead*/
                 {
                     long tot_run_time = reqDesc->service_id; // Should ideally use the serviceId to lookup the stored prediction, but since the serviceId is otherwise unused on client, using it to store the same information in transit
                     long have_run_for = reqDesc->have_run_for;
-                    std::cout << "tot_run_time >= have_run_for " << tot_run_time << " " << have_run_for << std::endl;
-                    assert(tot_run_time >= have_run_for);
+                    //std::cout << "Yield-ed kernel " << tot_run_time << " " << have_run_for << std::endl;
+                    if(tot_run_time +10000000 < have_run_for) /*need a tolerance bias for the predictor not being updated*/
+                    {
+                        std::cout << "Prediction was wrong but can't continue " << tot_run_time << " " << have_run_for << std::endl;
+                        assert(0);
+                    }
+                    if(tot_run_time < have_run_for)
+                    {
+                        std::cout << "Prediction was wrong but can continue " << tot_run_time << " " << have_run_for << std::endl;
+                    }
+                    //assert(tot_run_time >= have_run_for);
                     q = std::make_pair(tot_run_time - have_run_for, tenantId);
                 }
                 else /*New request, look up predictor*/
-                {
-                mPinfos.lock();
-                bool found = mPinfos.hasPinfo(ks, &min_duration, &max_duration);
-                mPinfos.unlock();
-                if(found) //if profile info present from previous launch
-                {
-                   //std::cout << ks.mGridX << " " << duration << " " << m_request_ctr[tenantId] << " " << m_request_ctr[tenantId]%23 << std::endl;
-                   //std::cout << "P " << tenantId << " " << /*mNumTenants**/duration << std::endl;
-                   if((tenantId == 0)&&(m_request_ctr[tenantId]%23==4))
-                   {
-                      mTieBreaker[0] = true;
-                      //std::cout << "4" << std::endl;
-                   }
-                   if((tenantId == 0)&&(m_request_ctr[tenantId]%23==6))
-                   {
-                      mTieBreaker[1] = true;
-                      //std::cout << "6" << std::endl;
-                   }
-                   if((tenantId == 0)&&(m_request_ctr[tenantId]%23==13))
-                   {
-                      mTieBreaker[2] = true;
-                      //std::cout << "13 " << duration << std::endl;
-                   }
-                   if((tenantId == 0)&&(m_request_ctr[tenantId]%23==14))
-                   {
-                      mTieBreaker[3] = true;
-                      //std::cout << "14" << std::endl;
-                   }
-                   if((tenantId == 0)&&(m_request_ctr[tenantId]%23==16))
-                   {
-                      mTieBreaker[4] = true;
-                      //std::cout << "16" << std::endl;
-                   }
-                   if((tenantId == 0)&&(m_request_ctr[tenantId]%23==18))
-                   {
-                      mTieBreaker[5] = true;
-                      //std::cout << "18" << std::endl;
-                   }
-                   if(mTieBreaker[0]||mTieBreaker[1]||mTieBreaker[2]||mTieBreaker[3]||mTieBreaker[4]||mTieBreaker[5])
-                   {
-                       //std::cout << "------" << std::endl;
-                   }
-                   if(tenantId == 0)
-                   {
-                     if(mTieBreaker[0]||mTieBreaker[1]||mTieBreaker[2]||mTieBreaker[3]||mTieBreaker[4]||mTieBreaker[5])
-                     {
-                        if(mTieBreaker[2])
-                        {
-                          min_duration = 2*min_duration;
-                        }
-                        min_duration = 2*min_duration;
-                        //std::cout << "doubled" << std::endl;
-                        mTieBreaker[0] = false;
-                        mTieBreaker[1] = false;
-                        mTieBreaker[2] = false;
-                        mTieBreaker[3] = false;
-                        mTieBreaker[4] = false;
-                        mTieBreaker[5] = false;
-                        q = std::make_pair(/*mNumTenants**/min_duration, tenantId);
-                        //std::cerr << tenantId << " " << ks.mGridX << " " << min_duration << std::endl;
-                        mReqWindow->setServiceId(min_duration, tenantId);
-                      }
-                      else
-                      {
-                        q = std::make_pair(/*mNumTenants**/min_duration, tenantId);
-                        //std::cerr << tenantId << " " << ks.mGridX << " " << min_duration << std::endl;
-                        mReqWindow->setServiceId(min_duration, tenantId);
-                      }
-                   }
-                   if(tenantId != 0)
-                   {
-                      if(m_request_ctr[tenantId]%52>2)
-                      {
-                        if((last_max_duration!=0) && (max_duration - last_max_duration > 20000000))
-                        {
-                              max_duration = last_max_duration;
-                        }
-                        q = std::make_pair(max_duration, tenantId);
-                        std::cerr << tenantId << " " << ks.mGridX << " " << max_duration << std::endl;
-                        mReqWindow->setServiceId(max_duration, tenantId);
-                        last_max_duration = max_duration;
-                      }
-                      else
-                      {
-                        q = std::make_pair(min_duration, tenantId);
-                        std::cerr << tenantId << " " << ks.mGridX << " " << min_duration << std::endl;
-                        mReqWindow->setServiceId(max_duration, tenantId);
-                      }
-                   }
-                   //q = std::make_pair(/*mNumTenants**/duration, tenantId);
-                   //std::cout << "[ARBITER] Pinfo deadline for " << tenantId << " with signature " << ks.mGridX << " " << ks.mGridY << " " << ks.mGridZ << " at " << /*mNumTenants**/duration << std::endl;
-                   //std::cout << ks.mGridX << " " << duration << std::endl;
-                }
-                else //else num of tenents x scheduling epoch
-                {
-                   //std::cout << "P " << tenantId << " " << /*mNumTenants**/mSchedulingEpoch << std::endl;
-                   q = std::make_pair(/*mNumTenants**/mSchedulingEpoch, tenantId);
-                   //std::cerr << tenantId << " " << ks.mGridX << " " << mSchedulingEpoch << std::endl;
-                   mReqWindow->setServiceId(mSchedulingEpoch, tenantId);
-                   //std::cout << "[ARBITER] Naive deadline for " << tenantId << " with signature " << ks.mGridX << " " << ks.mGridY << " " << ks.mGridZ << " at " << mNumTenants*mSchedulingEpoch << std::endl;
-                }
-                }
+		{
+			mPinfos.lock();
+			bool found = mPinfos.hasPinfo(ks, &min_duration, &max_duration);
+			mPinfos.unlock();
+			if(found) //if profile info present from previous launch
+			{
+				if((tenantId == 0)&&(m_request_ctr[tenantId]%23==3))
+				{
+					mTieBreaker[0] = true;
+				}
+				if((tenantId == 0)&&(m_request_ctr[tenantId]%23==5))
+				{
+					mTieBreaker[1] = true;
+				}
+				if((tenantId == 0)&&(m_request_ctr[tenantId]%23==12))
+				{
+					mTieBreaker[2] = true;
+				}
+				if((tenantId == 0)&&(m_request_ctr[tenantId]%23==13))
+				{
+					mTieBreaker[3] = true;
+				}
+				if((tenantId == 0)&&(m_request_ctr[tenantId]%23==15))
+				{
+					mTieBreaker[4] = true;
+				}
+				if((tenantId == 0)&&(m_request_ctr[tenantId]%23==17))
+				{
+					mTieBreaker[5] = true;
+				}
+				if(mTieBreaker[0]||mTieBreaker[1]||mTieBreaker[2]||mTieBreaker[3]||mTieBreaker[4]||mTieBreaker[5])
+				{
+					//std::cout << "------" << std::endl;
+				}
+				if(tenantId == 0)
+				{
+                                        if((m_request_ctr[tenantId]%23==14)&&(ks.mGridX != 192))
+                                        {
+                                            std::cout << "This should be 192 " << min_duration << std::endl;
+                                        }
+					if(mTieBreaker[0]||mTieBreaker[1]||mTieBreaker[2]||mTieBreaker[3]||mTieBreaker[4]||mTieBreaker[5])
+					{
+						if(mTieBreaker[2])
+						{
+							min_duration = 2*min_duration;
+						}
+						min_duration = 2*min_duration;
+						mTieBreaker[0] = false;
+						mTieBreaker[1] = false;
+						mTieBreaker[2] = false;
+						mTieBreaker[3] = false;
+						mTieBreaker[4] = false;
+						mTieBreaker[5] = false;
+						q = std::make_pair(/*mNumTenants**/min_duration, tenantId);
+						std::cerr << tenantId << " " << m_request_ctr[tenantId] << " 2x " << ks.mGridX << " " << min_duration << std::endl;
+						mReqWindow->setServiceId(min_duration, tenantId);
+					}
+					else
+					{
+						q = std::make_pair(/*mNumTenants**/min_duration, tenantId);
+						std::cerr << tenantId << " " << m_request_ctr[tenantId] << " x " << ks.mGridX << " " << min_duration << std::endl;
+						mReqWindow->setServiceId(min_duration, tenantId);
+					}
+				}
+				if(tenantId != 0)
+				{
+					if(m_request_ctr[tenantId]%52>1)
+					{
+						/*if((last_max_duration!=0) && (max_duration - last_max_duration > 20000000))
+						{
+							max_duration = last_max_duration;
+						}*/
+						q = std::make_pair(max_duration, tenantId);
+						std::cerr << tenantId << " " << m_request_ctr[tenantId] << " max " << ks.mGridX << " " << max_duration << std::endl;
+						mReqWindow->setServiceId(max_duration, tenantId);
+						last_max_duration = max_duration;
+					}
+					else
+					{
+						q = std::make_pair(min_duration, tenantId);
+						std::cerr << tenantId << " " << m_request_ctr[tenantId] << " min " << ks.mGridX << " " << min_duration << std::endl;
+						mReqWindow->setServiceId(min_duration, tenantId);
+					}
+				}
+				m_request_ctr[tenantId]++;
+			}
+			else //else num of tenents x scheduling epoch
+			{
+				q = std::make_pair(/*mNumTenants**/mSchedulingEpoch, tenantId);
+				//std::cerr << tenantId << " " << ks.mGridX << " " << mSchedulingEpoch << std::endl;
+				mReqWindow->setServiceId(mSchedulingEpoch, tenantId);
+			}
+		}
                 deadlinesPerTenant.push_back(q); //for now, based on order of arrival
-                //std::cout << q.first << "/" << q.second; 
+                //std::cout << "[REQUEST] " << q.first << " " << q.second; 
             }
             else
             {
@@ -212,11 +204,11 @@ void Arbiter::ProcessQueue()
           }
           if(deadlinesPerTenant.size()>0)
           {
-             std::cout << std::endl;
+             //std::cout << "REQUEST A" << std::endl;
           }
           else
           {
-             //std::cout << "RESPONSE NA" << std::endl;
+             //std::cout << "REQUEST NA" << std::endl;
           }
 
           //scheduling policy

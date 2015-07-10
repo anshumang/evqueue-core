@@ -38,6 +38,7 @@ struct PinfoListener
   Communicator *mComm;
   std::thread mThread;
   PinfoStore& mPinfos;
+  bool mFreezeUpdate;
 };
 
 #endif

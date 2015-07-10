@@ -20,7 +20,7 @@
 #include "PinfoListener.h"
 
 PinfoListener::PinfoListener(std::string url, PinfoStore& pinfos)
-  : mPinfos(pinfos)
+  : mPinfos(pinfos), mFreezeUpdate(false)
 {
    std::cout << "Creating PinfoListener at " << url << std::endl;
    mComm = new Communicator(url, RECEIVER);
@@ -50,7 +50,9 @@ void PinfoListener::ProcessPinfo()
      void *buf = NULL;
      int bytes = mComm->receive(&buf);
      assert(bytes >= 0);
-     //std::cout << "[PINFOLISTENER]" << " records " << *(int *)buf << " bytes " << bytes << std::endl;
+     if(!mFreezeUpdate)
+     {
+     std::cout << "[PINFOLISTENER]" << " records " << *(int *)buf << " bytes " << bytes << std::endl;
      std::vector<LongKernel> vecLongKernels; 
      for(int i=0; i<*(int *)buf; i++)
      {
@@ -76,6 +78,8 @@ void PinfoListener::ProcessPinfo()
         mPinfos.addPinfo(temp);
         mPinfos.unlock();
      }
+     }
+     mFreezeUpdate = true;
      //ProfileInfo pinfo(vecLongKernels.size(), vecLongKernels);
      //pinfo.printPinfo();
    }

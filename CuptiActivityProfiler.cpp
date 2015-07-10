@@ -290,6 +290,8 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
 */
    //LongKernel* long_kernels = &msg->m_long_kernels[0];
    //ProfileInfo pinfo(msg->m_long_kernels.size(), reinterpret_cast<void *>(long_kernels));
+   if(msg->m_long_kernels.size() > 0)
+   {
    ProfileInfo pinfo(msg->m_long_kernels.size(), msg->m_long_kernels);
    //pinfo.printPinfo();
    //std::cerr << numKernelRecords << "/" << msg->m_long_kernels.size() << "/" << sizeof(pinfo.mNumLongKernels)+pinfo.mNumLongKernels*sizeof(LongKernel) << std::endl;
@@ -307,6 +309,7 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
    gEvqm->mComm->send(buf, sizeof(pinfo.mNumLongKernels)+pinfo.mNumLongKernels*sizeof(LongKernel));
    //int bytes = nn_send(mSock, (void *)(ossbuf.c_str()), msg->m_stream.tellp(), 0);
    //assert(bytes >= 0);
+   }
   }
 
   free(buffer);
