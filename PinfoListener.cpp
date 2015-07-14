@@ -50,9 +50,10 @@ void PinfoListener::ProcessPinfo()
      void *buf = NULL;
      int bytes = mComm->receive(&buf);
      assert(bytes >= 0);
+     int num_records = *(int *)buf;
      if(!mFreezeUpdate)
      {
-     std::cout << "[PINFOLISTENER]" << " records " << *(int *)buf << " bytes " << bytes << std::endl;
+     std::cerr << "[PINFOLISTENER]" << " records " << *(int *)buf << " bytes " << bytes << std::endl;
      std::vector<LongKernel> vecLongKernels; 
      for(int i=0; i<*(int *)buf; i++)
      {
@@ -79,7 +80,10 @@ void PinfoListener::ProcessPinfo()
         mPinfos.unlock();
      }
      }
+     if(num_records == 348)
+     {
      mFreezeUpdate = true;
+     }
      //ProfileInfo pinfo(vecLongKernels.size(), vecLongKernels);
      //pinfo.printPinfo();
    }

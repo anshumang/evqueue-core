@@ -86,15 +86,16 @@ void Arbiter::ProcessQueue()
                 {
                     long tot_run_time = reqDesc->service_id; // Should ideally use the serviceId to lookup the stored prediction, but since the serviceId is otherwise unused on client, using it to store the same information in transit
                     long have_run_for = reqDesc->have_run_for;
+                    std::cout << "progress for " << tenantId << " " << " with request of " << tot_run_time << " " << have_run_for << std::endl;
                     //std::cout << "Yield-ed kernel " << tot_run_time << " " << have_run_for << std::endl;
                     if(tot_run_time +10000000 < have_run_for) /*need a tolerance bias for the predictor not being updated*/
                     {
-                        std::cout << "Prediction was wrong but can't continue " << tot_run_time << " " << have_run_for << std::endl;
-                        assert(0);
+                        //std::cout << "Prediction was wrong but can't continue " << tenantId << " " << tot_run_time << " " << have_run_for << std::endl;
+                        //assert(0);
                     }
                     if(tot_run_time < have_run_for)
                     {
-                        std::cout << "Prediction was wrong but can continue " << tot_run_time << " " << have_run_for << std::endl;
+                        //std::cout << "Prediction was wrong but can continue " << tenantId << " " << tot_run_time << " " << have_run_for << std::endl;
                     }
                     //assert(tot_run_time >= have_run_for);
                     q = std::make_pair(tot_run_time - have_run_for, tenantId);
