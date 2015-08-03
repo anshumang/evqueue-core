@@ -29,6 +29,7 @@ Reqresp::Reqresp(std::string req_url, std::string resp_url, int tenantId, Arbite
      std::cout << "Creating responder at " << resp_url << std::endl;
      mRespComm = new Communicator(resp_url, SENDER);
      mRespComm->connect();
+     std::cout << "[REQRESP] " << mReqComm->mSock << " " << mReqComm->mURL << " " << mRespComm->mSock << " " << mRespComm->mURL << std::endl;
 }
 
 Reqresp::~Reqresp()
@@ -70,6 +71,7 @@ void Reqresp::ProcessReq()
       //std::cout << "Adding request ";
       //printReqDescriptor(reqDesc);
       //std::cout << " from " << mTenantId << std::endl;
+      std::cout << "[REQRESP1] Incoming " << mTenantId << " " << reqDesc->grid[0] << " " << reqDesc->service_id << std::endl;
       mArb->mReqWindow->lock();
       mArb->mReqWindow->addRequest(mTenantId, reqDesc);  
       mArb->mReqWindow->unlock();
@@ -80,9 +82,13 @@ void Reqresp::ProcessReq()
       {
         //mArb->mReqWindow->lock(); //Write and Read from index i is always going to be serialized, writes and reads from indices i and j may conflict, but we don't care
         service_id = mArb->mReqWindow->getServiceId(mTenantId);
-        //std::cout << "[REQRESP] " << reqDesc->grid[0] << " " << service_id << std::endl;
+        std::cout << "[REQRESP2 New] " << mTenantId << " " << reqDesc->grid[0] << " " << service_id << std::endl;
         //mArb->mReqWindow->unlock();
         assert(service_id != -1);
+      }
+      else
+      {
+        std::cout << "[REQRESP2 In Service] " << mTenantId << " " << reqDesc->grid[0] << " " << reqDesc->service_id << std::endl;
       }
       //std::cout << "[REQRESP] Tenant " << mTenantId << " received response for signature " << reqDesc->grid[0] << " " << reqDesc->grid[1] << " " << reqDesc->grid[2] << std::endl;
       SendResponse(service_id);

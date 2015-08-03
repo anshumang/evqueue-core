@@ -39,8 +39,8 @@ struct RequestWindow
   std::set <int> mWaitingTenantId;
   std::vector<bool> mPerTenantReqReady;
   std::vector<long> mPerTenantServiceId;
-  std::array<std::mutex, 2> mPerTenantLock;
-  std::array<std::condition_variable, 2> mPerTenantNotify;
+  std::array<std::mutex, 4> mPerTenantLock;
+  std::array<std::condition_variable, 4> mPerTenantNotify;
   std::mutex mMutex;
   RequestWindow(int numTenants);
   void lock();

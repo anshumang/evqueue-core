@@ -36,7 +36,7 @@ struct EvqueueManager
   EvqueueManager(int tenantId);
   ~EvqueueManager(void);
   void synch(void);
-  int launch(KernelIdentifier kid, unsigned long have_run_for, long service_id);
+  int launch(KernelIdentifier kid, long have_run_for, long service_id);
   friend void CUPTIAPI bufferCompleted(CUcontext, uint32_t, uint8_t *, size_t, size_t);
 };
 
@@ -44,7 +44,7 @@ extern EvqueueManager *gEvqm;
 
 extern "C" void EvqueueCreate(int tenantId);
 extern "C" void EvqueueDestroy();
-extern "C" long EvqueueLaunch(KernelIdentifier k, unsigned long have_run_for, long service_id);
+extern "C" long EvqueueLaunch(KernelIdentifier k, long have_run_for, long service_id);
 extern "C" void EvqueueSynch();
 
 #endif

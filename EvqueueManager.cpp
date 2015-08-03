@@ -40,10 +40,20 @@ EvqueueManager::EvqueueManager(int tenantId)
      req_url = "ipc:///tmp/req1.ipc";
      resp_url = "ipc:///tmp/resp1.ipc";
   }
-  else
+  else if (tenantId == 2)
   {
      req_url = "ipc:///tmp/req2.ipc";
      resp_url = "ipc:///tmp/resp2.ipc";
+  }
+  else if (tenantId == 3)
+  {
+     req_url = "ipc:///tmp/req3.ipc";
+     resp_url = "ipc:///tmp/resp3.ipc";
+  }
+  else if (tenantId == 4)
+  {
+     req_url = "ipc:///tmp/req4.ipc";
+     resp_url = "ipc:///tmp/resp4.ipc";
   }
   std::cout << "Creating sender at " << req_url  << " for tenant " << tenantId << std::endl; 
   std::cout << "Creating receiver at " << resp_url  << " for tenant " << tenantId << std::endl; 
@@ -104,10 +114,11 @@ EvqueueManager::~EvqueueManager(void)
 
 void EvqueueManager::synch(void)
 {
+  //std::cout << "EvqueueSynch" << std::endl;
   CUPTI_CALL(cuptiActivityFlushAll(CUPTI_ACTIVITY_FLAG_NONE));
 }
 
-int EvqueueManager::launch(KernelIdentifier kid, unsigned long have_run_for, long service_id)
+int EvqueueManager::launch(KernelIdentifier kid, long have_run_for, long service_id)
 {
   return mIposer->launch(kid, have_run_for, service_id);
 }
@@ -125,7 +136,7 @@ void EvqueueDestroy()
 }
 
 extern "C"
-long EvqueueLaunch(KernelIdentifier kid, unsigned long have_run_for, long service_id)
+long EvqueueLaunch(KernelIdentifier kid, long have_run_for, long service_id)
 {
     return gEvqm->launch(kid, have_run_for, service_id);
 }

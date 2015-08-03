@@ -295,15 +295,29 @@ int main(int argc,const char **argv)
                 PinfoListener pil("ipc:///tmp/pinfo.ipc", pinfos);
                 pil.start();
 
-                //2 tenants, 10 ms epoch
-                Arbiter arb(2, 10000000, pinfos);
+                //2 tenants, 10/... ms epoch
+                Arbiter arb(4, 1000000/*1ms*/, pinfos);
                 arb.start();
 
+                /*NNT/IN*/
+                //Reqresp tenant1("ipc:///tmp/req1.ipc", "ipc:///tmp/resp1.ipc", 0, &arb);
+                //tenant1.start();
+		
+                /*PR*/
                 Reqresp tenant1("ipc:///tmp/req1.ipc", "ipc:///tmp/resp1.ipc", 0, &arb);
                 tenant1.start();
-		
-                Reqresp tenant2("ipc:///tmp/req2.ipc", "ipc:///tmp/resp2.ipc", 1, &arb);
+
+                /*BFS*/
+                Reqresp tenant2("ipc:///tmp/req2.ipc", "ipc:///tmp/resp2.ipc", 1/*0*/, &arb);
                 tenant2.start();
+
+                /*MIS*/
+                Reqresp tenant3("ipc:///tmp/req3.ipc", "ipc:///tmp/resp3.ipc", 2/*1*/, &arb);
+                tenant3.start();
+
+                /*CC*/
+                Reqresp tenant4("ipc:///tmp/req4.ipc", "ipc:///tmp/resp4.ipc", 3/*2*/, &arb);
+                tenant4.start();
 
                 arb.join();
 		

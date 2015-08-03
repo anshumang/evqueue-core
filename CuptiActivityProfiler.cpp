@@ -103,6 +103,7 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
   ClientMessage *msg = new ClientMessage;
 
   unsigned long long start_epoch = 0, cumulated_use = 0;
+  //std::cerr << "--------------------------------" << std::endl;
 
     do {
       status = cuptiActivityGetNextRecord(buffer, validSize, &record);
@@ -161,8 +162,9 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
              m_last_kernel_end_no_offset = kernel_record->end;
           }
           cumulated_use += kernel_record->end - kernel_record->start;
+	  /*std::cerr << "[PINFO] " << kernel_record->start - m_start_timestamp << " " << kernel_record->name << kernel_record->dynamicSharedMemory << " " << kernel_record->staticSharedMemory << " " << kernel_record->localMemoryPerThread << " " << kernel_record->localMemoryTotal << " " << kernel_record->registersPerThread << " " << kernel_record->sharedMemoryConfig << " " << kernel_record->partitionedGlobalCacheExecuted << " " <<kernel_record->partitionedGlobalCacheRequested << " " << " " << kernel_record->end - kernel_record->start << " " << kernel_record->gridX << " " << kernel_record->gridY << " " << kernel_record->gridZ << " " << kernel_record->blockX << " " << kernel_record->blockY << " " << kernel_record->blockZ << " " << std::endl;*/
 	  /*Use > 10ms*/
-          if(kernel_record->end - kernel_record->start > 10000000)
+          if(kernel_record->end - kernel_record->start > 1000000/*10000000*/) /*1ms for BFS*/
           {
             //std::cerr << "[PINFO] " << /*kernel_record->start - m_start_timestamp << " " <<*/ /*kernel_record->name */kernel_record->dynamicSharedMemory << " " << kernel_record->staticSharedMemory << " " << kernel_record->localMemoryPerThread << " " << kernel_record->localMemoryTotal << " " << kernel_record->registersPerThread << " " << kernel_record->sharedMemoryConfig << " " << kernel_record->partitionedGlobalCacheExecuted << " " <<kernel_record->partitionedGlobalCacheRequested << " " << " " << kernel_record->end - kernel_record->start << " " << kernel_record->gridX << " " << kernel_record->gridY << " " << kernel_record->gridZ << " " << kernel_record->blockX << " " << kernel_record->blockY << " " << kernel_record->blockZ << " " << std::endl;
             LongKernel use;
@@ -271,12 +273,13 @@ void CUPTIAPI bufferCompleted(CUcontext ctx, uint32_t streamId, uint8_t *buffer,
     } while (1);
     //std::cerr << "END " << m_last_kernel_end - start_epoch << " " << cumulated_use << " " << ((float)cumulated_use/(float)(m_last_kernel_end - start_epoch)) << std::endl;
     last_cumulated_use = cumulated_use;
-/*
-    std::cout << numCompletions << "/" << numRecords << 
+
+    /*std::cout << numCompletions << "/" << numRecords << 
     "/" << numKernelRecords << 
     "," << msg->m_long_gaps.size() << 
     "," << msg->m_long_kernels.size() << std::endl;
-*/
+    */
+
     // report any records dropped from the queue
     size_t dropped;
     CUPTI_CALL(cuptiActivityGetNumDroppedRecords(ctx, streamId, &dropped));

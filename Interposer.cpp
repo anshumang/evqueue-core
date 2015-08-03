@@ -22,7 +22,7 @@
 #include <chrono>
 #include <EvqueueManager.h>
 
-/*cudaError_t*/long Interposer::launch(KernelIdentifier kid, unsigned long have_run_for, int service_id) 
+/*cudaError_t*/long Interposer::launch(KernelIdentifier kid, long have_run_for, long service_id) 
 {
    //cudaError_t (*cudaLaunchHandle)(const void *);
    //cudaLaunchHandle = (cudaError_t (*)(const void *))dlsym(m_cudart, "cudaLaunch");
@@ -47,13 +47,13 @@
    char nullch = '\0';
    std::memcpy(sendbuf+sizeof(RequestDescriptor)+kid.m_name.length(), &nullch, sizeof(char));
 
-   /*std::cout <<
+   std::cout <<
    reqDesc.timestamp - gEvqm->mStartSysClock << " "
    << kid.m_name.c_str() << " "
    << kid.m_grid[0] << " " << kid.m_grid[1] << " " << kid.m_grid[2] << " "
    << kid.m_block[0] << " " << kid.m_block[1] << " " << kid.m_block[2] << " "
    << sizeof(RequestDescriptor)+kid.m_name.length()+1
-   << std::endl;*/
+   << std::endl;
 
 /*CUDA-7.0 test*/
  #if 1
@@ -72,7 +72,7 @@
    }
 #endif
    assert(respDesc != NULL);
-   //std::cout << "[INTERPOSER] " << respDesc->mNeedYield << " " << respDesc->mRunSlice << " " << respDesc->mServiceId << std::endl;
+   std::cout << "[INTERPOSER] " << respDesc->mNeedYield << " " << respDesc->mRunSlice << " " << respDesc->mServiceId << std::endl;
    return respDesc->mServiceId;
    //return 0;
 }

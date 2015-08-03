@@ -30,7 +30,7 @@ class Interposer
    public:
       Interposer();
       ~Interposer();
-      long launch(KernelIdentifier kid, unsigned long have_run_for, int service_id);
+      long launch(KernelIdentifier kid, long have_run_for, long service_id);
 };
 
 #endif
