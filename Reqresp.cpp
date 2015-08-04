@@ -91,6 +91,8 @@ void Reqresp::ProcessReq()
         std::cout << "[REQRESP2 In Service] " << mTenantId << " " << reqDesc->grid[0] << " " << reqDesc->service_id << std::endl;
       }
       //std::cout << "[REQRESP] Tenant " << mTenantId << " received response for signature " << reqDesc->grid[0] << " " << reqDesc->grid[1] << " " << reqDesc->grid[2] << std::endl;
+      if(mTenantId == 0) /*PR*/
+       std::this_thread::sleep_for(std::chrono::milliseconds(2));
       SendResponse(service_id);
       mReqComm->freemsg(buf);
    }

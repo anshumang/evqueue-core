@@ -21,6 +21,8 @@
 #define _REQRESP_H
 
 #include <boost/thread.hpp>
+#include <chrono>
+#include <thread>
 #include "Communicator.h"
 #include "ReqRespDescriptor.h"
 #include "Arbiter.h"

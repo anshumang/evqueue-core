@@ -79,7 +79,7 @@ void Arbiter::ProcessQueue()
                 ks.mBlockY = reqDesc->block[1];
                 ks.mBlockZ = reqDesc->block[2];
                 unsigned long min_duration=0, max_duration=0;
-                if((reqDesc->service_id != -1)&&(reqDesc->have_run_for > 0)) /*In service request - was 'yield'-ed, shouldn't lookup predictor and compute remaining time, instead*/
+                if(false/*(reqDesc->service_id != -1)&&(reqDesc->have_run_for > 0)*/) /*In service request - was 'yield'-ed, shouldn't lookup predictor and compute remaining time, instead*/
                 {
                     long tot_run_time = reqDesc->service_id; // Should ideally use the serviceId to lookup the stored prediction, but since the serviceId is otherwise unused on client, using it to store the same information in transit
                     long have_run_for = reqDesc->have_run_for;
@@ -91,7 +91,7 @@ void Arbiter::ProcessQueue()
 			mPinfos.lock();
 			bool found = mPinfos.hasPinfo(ks, &min_duration, &max_duration);
 			mPinfos.unlock();
-			if(found) //if profile info present from previous launch
+			if(false/*found*/) //if profile info present from previous launch
 			{
 				if((tenantId == 0)&&(m_request_ctr[tenantId]%23==3))
 				{
@@ -170,7 +170,11 @@ void Arbiter::ProcessQueue()
 			{
 				q = std::make_pair(/*mNumTenants**/mSchedulingEpoch, tenantId);
 				//std::cerr << tenantId << " " << ks.mGridX << " " << mSchedulingEpoch << std::endl;
-				mReqWindow->setServiceId(mSchedulingEpoch, tenantId);
+                                if(tenantId == 0){
+                                 mReqWindow->setServiceId(mSchedulingEpoch*2, tenantId);
+                                }else{
+				 mReqWindow->setServiceId(mSchedulingEpoch, tenantId);
+                                }
 			}
 		}
                 deadlinesPerTenant.push_back(q); //for now, based on order of arrival
